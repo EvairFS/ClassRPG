@@ -1,6 +1,7 @@
 # ClassRPG
 
 1. Descrição
+
 Gamificação no ambiente escolar: desenvolvimento de uma plataforma para aumentar o engajamento dos alunos no processo de aprendizagem.
 
 A proposta consiste em criar um sistema que utiliza elementos comuns de jogos — como pontos, níveis, recompensas e rankings — aplicados a atividades educacionais.
