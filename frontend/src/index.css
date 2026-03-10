@@ -1,68 +1,142 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+    --background: 240 20% 4%;
+    --foreground: 240 10% 90%;
+
+    --card: 248 18% 14%;
+    --card-foreground: 240 10% 90%;
+
+    --popover: 248 18% 14%;
+    --popover-foreground: 240 10% 90%;
+
+    --primary: 263 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 248 18% 18%;
+    --secondary-foreground: 240 10% 90%;
+
+    --muted: 248 15% 20%;
+    --muted-foreground: 240 10% 55%;
+
+    --accent: 38 92% 50%;
+    --accent-foreground: 240 20% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 248 18% 22%;
+    --input: 248 18% 22%;
+    --ring: 263 70% 58%;
+
+    --radius: 0px;
+
+    --sidebar-background: 248 18% 10%;
+    --sidebar-foreground: 240 10% 90%;
+    --sidebar-primary: 263 70% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 248 18% 18%;
+    --sidebar-accent-foreground: 240 10% 90%;
+    --sidebar-border: 248 18% 22%;
+    --sidebar-ring: 263 70% 58%;
   }
 }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display uppercase tracking-wider;
+  }
+}
+
+@layer utilities {
+  .text-gold {
+    color: hsl(var(--accent));
+  }
+
+  .border-gold {
+    border-color: hsl(var(--accent));
+  }
+
+  .bg-gold {
+    background-color: hsl(var(--accent));
+  }
+}
+
+@keyframes xp-fill {
+  from { width: 0%; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes beam-reveal {
+  0% { transform: scaleX(0); opacity: 0; }
+  30% { transform: scaleX(0.01); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes etch-in {
+  0% { opacity: 0; letter-spacing: 0.5em; }
+  100% { opacity: 1; letter-spacing: 0.2em; }
+}
+
+@keyframes crack-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.2); filter: blur(4px); }
+}
+
+@keyframes xp-pop {
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  50% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out forwards;
+}
+
+.animate-xp-fill {
+  animation: xp-fill 1s ease-out forwards;
+}
+
+.animate-beam {
+  animation: beam-reveal 0.8s ease-out forwards;
+}
+
+.animate-etch {
+  animation: etch-in 0.6s ease-out 0.8s forwards;
+  opacity: 0;
+}
+
+.animate-crack {
+  animation: crack-out 0.5s ease-in forwards;
+}
+
+.animate-xp-pop {
+  animation: xp-pop 1.5s ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
