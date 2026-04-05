@@ -30,10 +30,10 @@ const Navbar = ({ userType }: NavbarProps) => {
     <nav className="border-b border-border bg-card sticky top-0 z-40">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to={userType === "student" ? "/student" : "/teacher"} className="font-display text-lg tracking-widest text-accent uppercase">
-            ClassRPG
+          <Link to="/student" className="flex items-center gap-2">
+            <img src="/logo.png" alt="ClassRPG Logo" className="h-10 w-10 object-contain" />
+            <span className="font-display text-lg tracking-widest text-accent uppercase">ClassRPG</span>
           </Link>
-
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             {links.map((link) => (
