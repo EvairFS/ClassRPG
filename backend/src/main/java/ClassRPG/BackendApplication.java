@@ -1,13 +1,13 @@
-package edu.fametro.classRPG;
+package ClassRPG;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ClassRpgApplication {
+public class BackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ClassRpgApplication.class, args);
+		SpringApplication.run(BackendApplication.class, args);
 	}
 
 }

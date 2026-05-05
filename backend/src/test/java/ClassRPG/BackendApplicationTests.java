@@ -1,10 +1,10 @@
-package edu.fametro.classRPG;
+package ClassRPG;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ClassRpgApplicationTests {
+class BackendApplicationTests {
 
 	@Test
 	void contextLoads() {
