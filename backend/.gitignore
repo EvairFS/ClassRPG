@@ -31,3 +31,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.coverage/
+coverage/
