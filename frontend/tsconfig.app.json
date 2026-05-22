@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -18,7 +19,7 @@
     "noUnusedParameters": false,
     "paths": {
       "@/*": [
-        "./src/*"
+        "src/*"
       ]
     },
     "skipLibCheck": true,
@@ -30,6 +31,6 @@
     "useDefineForClassFields": true
   },
   "include": [
-    "src"
+    "src/**/*"
   ]
 }
