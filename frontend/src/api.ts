@@ -17,6 +17,11 @@ function getAuthHeaders(): Record<string, string> {
   } catch {
     // Ignore parse errors
   }
+
+  if (import.meta.env.DEV) {
+    return { "X-User-Id": "s3" };
+  }
+
   return {};
 }
 

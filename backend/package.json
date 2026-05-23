@@ -7,6 +7,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:setup": "node -e \"import { readFileSync } from 'fs'; import pg from 'pg'; const { DB } = await import('./src/config.js'); const pool = new pg.Pool(DB); const schema = readFileSync('./schema.sql', 'utf8'); const seed = readFileSync('./seed.sql', 'utf8'); await pool.query(schema); await pool.query(seed); console.log('✅ Database setup complete'); process.exit(0);\"",
+    "test-db": "node test-db.js",
+    "test-db.js": "node test-db.js",
     "db:schema": "psql -f schema.sql",
     "db:seed": "psql -f seed.sql"
   },
