@@ -1,15 +1,51 @@
-const BASE_URL = "/api";
+// Note: response types are inferred from the API; import specific types as needed.
+
+const BASE_URL = import.meta.env.VITE_API_BASE ?? (typeof window !== "undefined" ? "/api" : "http://localhost:3001");
+
+/**
+ * Extracts the token from the auth response (stored for subsequent requests).
+ */
+function getAuthHeaders(): Record<string, string> {
+  try {
+    const stored = localStorage.getItem("auth");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed?.token) {
+        return { Authorization: `Bearer ${parsed.token}` };
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return {};
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...getAuthHeaders(),
+    ...(options?.headers as Record<string, string> || {}),
+  };
+
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers,
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || `Erro ${res.status}`);
   }
-  return res.json();
+
+  const body = await res.json();
+
+  // New response format: { data: T, meta?: ... }
+  if (body && typeof body === "object" && "data" in body) {
+    return body.data as T;
+  }
+
+  // Legacy flat response format
+  return body as T;
 }
 
 // ---- Auth ----

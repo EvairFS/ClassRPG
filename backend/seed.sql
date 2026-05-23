@@ -1,7 +1,8 @@
 -- USERS (for login)
+-- Passwords are bcrypt hashes of '123456'
 INSERT INTO users (id, email, password, role, name) VALUES
-  ('s1', 'ana.souza@classrpg.io', '123456', 'student', 'Ana Souza'),
-  ('t1', 'renata@classrpg.io', '123456', 'teacher', 'Renata Vasconcelos')
+  ('s1', 'ana.souza@classrpg.io', '$2b$10$PU4trYLd7zQRIFlDXU96..q1hRvLl4iuHj5LdTDATrIkdY8ZIiaKe', 'student', 'Ana Souza'),
+  ('t1', 'renata@classrpg.io', '$2b$10$PU4trYLd7zQRIFlDXU96..q1hRvLl4iuHj5LdTDATrIkdY8ZIiaKe', 'teacher', 'Renata Vasconcelos')
 ON CONFLICT (id) DO NOTHING;
 
 -- ACHIEVEMENTS

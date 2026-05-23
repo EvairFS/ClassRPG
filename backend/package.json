@@ -1,14 +1,32 @@
 {
   "name": "classrpg-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "ClassRPG Gamified Education Platform - Backend API",
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "db:setup": "node -e \"import { readFileSync } from 'fs'; import pg from 'pg'; const { DB } = await import('./src/config.js'); const pool = new pg.Pool(DB); const schema = readFileSync('./schema.sql', 'utf8'); const seed = readFileSync('./seed.sql', 'utf8'); await pool.query(schema); await pool.query(seed); console.log('✅ Database setup complete'); process.exit(0);\"",
+    "db:schema": "psql -f schema.sql",
+    "db:seed": "psql -f seed.sql"
   },
+  "keywords": ["classrpg", "gamification", "education", "api"],
+  "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "pg": "^8.13.1"
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.13.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9"
   }
 }
