@@ -1,5 +1,9 @@
 import pg from "pg";
 import { DB } from "./config.js";
+import postgres from 'postgres';
+
+const connectionString = process.env.DATABASE_URL
+const sql = postgres(connectionString)
 
 const pool = new pg.Pool({
   host: DB.host,
@@ -53,4 +57,5 @@ export function getClient() {
   return pool.connect();
 }
 
+export default sql
 export default pool;
