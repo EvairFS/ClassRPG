@@ -13,7 +13,6 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        # 👇 Vincula automaticamente a URL do banco de dados que está configurado abaixo
         fromDatabase:
           name: classrpg-db
           property: connectionString
@@ -24,20 +23,20 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
 
-  # Frontend Web Service
-  - type: web
+  # Frontend Web Service (Servidor dinâmico Node.js)
+  - type: web # ⏪ Voltou para Web Service dinâmico
     name: classrpg-web
-    runtime: static # 👈 Ajustado: para sites estáticos no Render, o runtime é "static"
-    region: oregon
+    runtime: node # ⏪ Rodando em ambiente Node.js
+    region: oregon # ⏪ Agora a região faz sentido e é permitida!
     plan: free
     branch: main
     rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist # 👈 Ajustado: Como o rootDir já é "frontend", o caminho aqui é relativo a ele
+    buildCommand: npm install && npm run build # Ajuste aqui se o seu front tiver comando de build (como no Next.js)
+    startCommand: npm start # O comando que inicia o seu servidor frontend
     envVars:
       - key: NODE_ENV
         value: production
-      - key: VITE_API_URL
+      - key: VITE_API_URL # Se for Next.js/outro, mude o nome da variável se necessário
         fromService:
           name: classrpg-api
           type: web
@@ -51,3 +50,4 @@ databases:
     user: classrpg
     plan: free
     region: oregon
+
