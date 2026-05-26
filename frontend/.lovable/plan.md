@@ -51,11 +51,11 @@ Adicionar as 8 rotas funcionais que faltam, mais um Custom404 global, mantendo a
 
 ## Ajustes no AppShell
 
-Hoje todos os itens da sidebar apontam para a mesma rota (`/student`, `/teacher`, `/admin`). Corrigir o mapa `NAV` para usar as rotas reais:
+Hoje todos os itens da sidebar apontam para a mesma rota (`/student`, `/teacher`). Corrigir o mapa `NAV` para usar as rotas reais:
 
 - **student**: `/student`, `/missions`, `/activities`, `/ranking`, `/achievements`, `/teams`, `/notifications`
 - **teacher**: `/teacher`, `/activities`, `/missions`, `/reports`, `/notifications`
-- **admin**: `/admin`, `/reports`, `/notifications`
+ 
 
 Active state passa a ser baseado em `path === item.to` (não mais índice fixo). Sino de notificações no header também vira `<Link to="/notifications">`.
 
@@ -78,5 +78,5 @@ Active state passa a ser baseado em `path === item.to` (não mais índice fixo).
 ## Fora de escopo (fica para Fase 3)
 
 - Backend real / Lovable Cloud
-- Páginas de admin específicas (escolas, professores, alunos)
+ 
 - Página de perfil editável, configurações, sistema de XP em tempo real

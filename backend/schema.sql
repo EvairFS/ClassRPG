@@ -14,7 +14,7 @@ CREATE TABLE users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('student','teacher','admin')),
+  role TEXT NOT NULL CHECK (role IN ('student','teacher')),
   name TEXT NOT NULL
 );
 

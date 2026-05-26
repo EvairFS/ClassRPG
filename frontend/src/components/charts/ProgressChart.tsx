@@ -1,5 +1,11 @@
 import {
-  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 export function ProgressChart({ data }: { data: { day: string; xp: number }[] }) {
@@ -13,10 +19,30 @@ export function ProgressChart({ data }: { data: { day: string; xp: number }[] })
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 0.06)" />
-        <XAxis dataKey="day" stroke="oklch(0.7 0.025 250)" fontSize={12} tickLine={false} axisLine={false} />
+        <XAxis
+          dataKey="day"
+          stroke="oklch(0.7 0.025 250)"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+        />
         <YAxis stroke="oklch(0.7 0.025 250)" fontSize={12} tickLine={false} axisLine={false} />
-        <Tooltip contentStyle={{ background: "oklch(0.25 0.04 260)", border: "1px solid oklch(1 0 0 / 0.1)", borderRadius: 12, color: "white", fontSize: 12 }} />
-        <Area type="monotone" dataKey="xp" stroke="oklch(0.72 0.22 296)" strokeWidth={2} fill="url(#xpGrad)" />
+        <Tooltip
+          contentStyle={{
+            background: "oklch(0.25 0.04 260)",
+            border: "1px solid oklch(1 0 0 / 0.1)",
+            borderRadius: 12,
+            color: "white",
+            fontSize: 12,
+          }}
+        />
+        <Area
+          type="monotone"
+          dataKey="xp"
+          stroke="oklch(0.72 0.22 296)"
+          strokeWidth={2}
+          fill="url(#xpGrad)"
+        />
       </AreaChart>
     </ResponsiveContainer>
   );

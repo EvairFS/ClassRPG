@@ -29,21 +29,29 @@ export function AuthLayout({
           </div>
           <div className="space-y-6">
             <h2 className="text-4xl font-bold leading-tight text-foreground">
-              Transforme a sala de aula em uma <span className="text-gradient-primary">jornada épica</span>.
+              Transforme a sala de aula em uma{" "}
+              <span className="text-gradient-primary">jornada épica</span>.
             </h2>
             <p className="max-w-md text-base text-muted-foreground">
-              Missões, XP, patentes e rankings em tempo real para uma educação mais
-              engajadora — desenvolvida com qualidade SaaS para escolas modernas.
+              Missões, XP, patentes e rankings em tempo real para uma educação mais desenvolvida com
+              qualidade SaaS para escolas modernas.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map((t) => (
-                <span key={t} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80">
-                  {t}
-                </span>
-              ))}
+              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map(
+                (t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80"
+                  >
+                    {t}
+                  </span>
+                ),
+              )}
             </div>
           </div>
-          <div className="text-xs text-muted-foreground/70">© ClassRPG · feito para escolas, professores e aventureiros do saber</div>
+          <div className="text-xs text-muted-foreground/70">
+            © ClassRPG · feito para escolas, professores e aventureiros do saber
+          </div>
         </div>
 
         {/* Form side */}

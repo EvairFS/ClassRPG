@@ -1,21 +1,43 @@
 import pg from "pg";
-import { DB } from "./config.js";
 import postgres from "postgres";
+import { DB, DATABASE_URL, USE_DB_SSL } from "./config.js";
 
-const connectionString = process.env.DATABASE_URL;
-export const sql = postgres(connectionString);
+const sslOptions = USE_DB_SSL ? { rejectUnauthorized: false } : false;
 
-export const pool = new pg.Pool({
-  host: DB.host,
-  port: DB.port,
-  user: DB.user,
-  password: DB.password,
-  database: DB.database,
-  // Connection pool settings
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
+const poolConfig = DATABASE_URL
+  ? {
+      connectionString: DATABASE_URL,
+      ssl: sslOptions,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    }
+  : {
+      host: DB.host,
+      port: DB.port,
+      user: DB.user,
+      password: DB.password,
+      database: DB.database,
+      ssl: sslOptions,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    };
+
+export const pool = new pg.Pool(poolConfig);
+
+const postgresConfig = DATABASE_URL
+  ? DATABASE_URL
+  : {
+      host: DB.host,
+      port: DB.port,
+      username: DB.user,
+      password: DB.password,
+      database: DB.database,
+      ssl: sslOptions,
+    };
+
+export const sql = postgres(postgresConfig);
 
 // Test connection on startup
 pool.query("SELECT 1").catch((err) => {
@@ -57,5 +79,4 @@ export function getClient() {
   return pool.connect();
 }
 
-export default sql
-export default pool;
+// No default export — use named exports: `sql`, `pool`, `q`, `qOne`, etc.

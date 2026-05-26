@@ -1,4 +1,4 @@
-import { Activity } from "@/data/mockData";
+import type { Activity } from "@/types";
 import { Button } from "@/components/ui/button";
 
 interface ActivityCardProps {
@@ -21,14 +21,25 @@ const ActivityCard = ({ activity, onSubmit, showSubmit = false }: ActivityCardPr
   };
 
   return (
-    <div className={`border bg-card p-5 ${statusStyles[activity.status]} transition-all duration-300`}>
+    <div
+      className={`border bg-card p-5 ${statusStyles[activity.status]} transition-all duration-300`}
+    >
       <div className="flex justify-between items-start mb-3">
-        <h3 className="font-display text-sm tracking-wider text-foreground uppercase">{activity.title}</h3>
-        <span className={`text-xs font-body px-2 py-1 border ${
-          activity.status === "completed" ? "border-border text-muted-foreground" :
+        <h3 className="font-display text-sm tracking-wider text-foreground uppercase">
+          {activity.title}
+        </h3>
+        <span
+          className={`text-xs font-body px-2 py-1 border ${
+            activity.status === "completed"
+              ? "border-border text-muted-foreground"
+              : // eslint-disable-next-line prettier/prettier
           activity.status === "active" ? "border-accent text-accent" :
+          // eslint-disable-next-line prettier/prettier
+          // eslint-disable-next-line prettier/prettier
+          // eslint-disable-next-line prettier/prettier
           "border-primary text-primary"
-        }`}>
+          }`}
+        >
           {statusLabels[activity.status]}
         </span>
       </div>

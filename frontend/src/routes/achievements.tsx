@@ -37,11 +37,15 @@ function AchievementsPage() {
           <div className="pointer-events-none absolute -top-20 right-0 size-72 rounded-full bg-accent/20 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Galeria de troféus</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Galeria de troféus
+              </p>
               <h2 className="mt-1 text-2xl font-bold text-foreground">
                 {earned} <span className="text-muted-foreground">de</span> {total} conquistas
               </h2>
-              <p className="text-sm text-muted-foreground">Continue jogando para desbloquear todas!</p>
+              <p className="text-sm text-muted-foreground">
+                Continue jogando para desbloquear todas!
+              </p>
             </div>
             <div className="flex-1 min-w-[200px] max-w-sm">
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">

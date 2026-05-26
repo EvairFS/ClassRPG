@@ -41,17 +41,11 @@ const NAV: Record<UserRole, { to: string; label: string; icon: React.ElementType
     { to: "/reports", label: "Relatórios", icon: BarChart3 },
     { to: "/notifications", label: "Notificações", icon: Bell },
   ],
-  admin: [
-    { to: "/admin", label: "Visão geral", icon: LayoutDashboard },
-    { to: "/reports", label: "Relatórios", icon: BarChart3 },
-    { to: "/notifications", label: "Notificações", icon: Bell },
-  ],
 };
 
 const ROLE_LABEL: Record<UserRole, string> = {
   student: "Aluno",
   teacher: "Professor",
-  admin: "Administrador",
 };
 
 export function AppShell({ role, title, children }: AppShellProps) {
@@ -88,7 +82,12 @@ export function AppShell({ role, title, children }: AppShellProps) {
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
                 )}
               >
-                <item.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                <item.icon
+                  className={cn(
+                    "size-4",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                />
                 {item.label}
               </Link>
             );
@@ -110,11 +109,11 @@ export function AppShell({ role, title, children }: AppShellProps) {
         <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 text-[11px] font-semibold ring-1 ring-white/15">
-              {role === "student" ? CURRENT_STUDENT.avatar : role === "teacher" ? "RV" : "AD"}
+              {role === "student" ? CURRENT_STUDENT.avatar : "RV"}
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-foreground">
-                {role === "student" ? CURRENT_STUDENT.name : role === "teacher" ? "Renata V." : "Admin"}
+                {role === "student" ? CURRENT_STUDENT.name : "Renata V."}
               </p>
               <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
             </div>
@@ -136,9 +135,14 @@ export function AppShell({ role, title, children }: AppShellProps) {
                 placeholder="Buscar missões, alunos..."
                 className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/60"
               />
-              <kbd className="rounded border border-white/10 px-1 text-[10px] text-muted-foreground/70">⌘K</kbd>
+              <kbd className="rounded border border-white/10 px-1 text-[10px] text-muted-foreground/70">
+                ⌘K
+              </kbd>
             </div>
-            <Link to="/notifications" className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground">
+            <Link
+              to="/notifications"
+              className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground"
+            >
               <Bell className="size-4" />
               {unread > 0 && (
                 <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">

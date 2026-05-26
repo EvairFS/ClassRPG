@@ -34,7 +34,8 @@ function ActivitiesPage() {
   );
 
   const list = MOCK_ACTIVITIES.filter(
-    (a) => (status === "all" || a.status === status) && (subject === "all" || a.subject === subject),
+    (a) =>
+      (status === "all" || a.status === status) && (subject === "all" || a.subject === subject),
   );
 
   return (
@@ -91,17 +92,21 @@ function ActivitiesPage() {
                     </span>
                     <DifficultyBadge value={a.difficulty} />
                   </div>
-                  <h3 className="mt-2 truncate text-base font-semibold text-foreground">{a.title}</h3>
+                  <h3 className="mt-2 truncate text-base font-semibold text-foreground">
+                    {a.title}
+                  </h3>
                   <p className="mt-0.5 truncate text-xs text-muted-foreground">{a.description}</p>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-4">
                   <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                    <Trophy className="size-3.5" />
-                    +{a.xpReward} XP
+                    <Trophy className="size-3.5" />+{a.xpReward} XP
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="size-3.5" />
-                    {new Date(a.deadline).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                    {new Date(a.deadline).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
                   </span>
                   <StatusBadge status={a.status} grade={a.grade} />
                   <ChevronRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />

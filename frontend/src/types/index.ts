@@ -1,4 +1,4 @@
-export type UserRole = "student" | "teacher" | "admin";
+export type UserRole = "student" | "teacher";
 
 export type Patent =
   | "Novato"
@@ -95,6 +95,15 @@ export interface Team {
   weeklyXp?: number;
   memberIds?: string[];
   motto?: string;
+}
+
+export interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  status: "pending" | "active" | "completed";
+  xpReward: number;
+  deadline: string;
 }
 
 export interface RankingEntry {

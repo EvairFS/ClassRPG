@@ -1,17 +1,28 @@
 import "dotenv/config";
 import pg from "pg";
-import { DB } from "./src/config.js";
+import { DB, DATABASE_URL, USE_DB_SSL } from "./src/config.js";
 
-const pool = new pg.Pool({
-  host: DB.host,
-  port: DB.port,
-  user: DB.user,
-  password: DB.password,
-  database: DB.database,
-  max: 5,
-  idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 5000,
-});
+const sslOptions = USE_DB_SSL ? { rejectUnauthorized: false } : false;
+
+const pool = DATABASE_URL
+  ? new pg.Pool({
+      connectionString: DATABASE_URL,
+      ssl: sslOptions,
+      max: 5,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
+    })
+  : new pg.Pool({
+      host: DB.host,
+      port: DB.port,
+      user: DB.user,
+      password: DB.password,
+      database: DB.database,
+      ssl: sslOptions,
+      max: 5,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
+    });
 
 async function main() {
   try {
