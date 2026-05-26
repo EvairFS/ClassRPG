@@ -30,8 +30,6 @@ services:
     region: oregon
     plan: free
     branch: main
-    # 💡 Sem rootDir para rodar a partir da raiz geral do projeto
-    # 🛠️ O segredo: passamos a flag para o npm NÃO ignorar as devDependencies do front!
     buildCommand: npm install && npm run install:frontend -- --production=false && npm run build:frontend
     startCommand: npm run start:frontend
     envVars:
@@ -42,6 +40,11 @@ services:
           name: classrpg-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+      # 👇 Liberação total de segurança para o Preview do Vite no Render
+      - key: VITE_ALLOWED_HOSTS
+        value: '["classrpg-web.onrender.com"]'
+      - key: ALLOWED_HOSTS
+        value: '["classrpg-web.onrender.com"]'
     autoDeploy: true
 
 # Database
@@ -51,4 +54,3 @@ databases:
     user: classrpg
     plan: free
     region: oregon
-    
