@@ -23,20 +23,21 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
 
-  # Frontend Web Service (Servidor dinâmico Node.js)
-  - type: web # ⏪ Voltou para Web Service dinâmico
+  # Frontend Web Service (Ajustado para TanStack Start / Lovable)
+  - type: web
     name: classrpg-web
-    runtime: node # ⏪ Rodando em ambiente Node.js
-    region: oregon # ⏪ Agora a região faz sentido e é permitida!
+    runtime: node
+    region: oregon
     plan: free
     branch: main
-    rootDir: frontend
-    buildCommand: npm install && npm run build # Ajuste aqui se o seu front tiver comando de build (como no Next.js)
-    startCommand: npm start # O comando que inicia o seu servidor frontend
+    # 💡 Sem rootDir para rodar a partir da raiz geral do projeto
+    # 🛠️ O segredo: passamos a flag para o npm NÃO ignorar as devDependencies do front!
+    buildCommand: npm install && npm run install:frontend -- --production=false && npm run build:frontend
+    startCommand: npm run start:frontend
     envVars:
       - key: NODE_ENV
         value: production
-      - key: VITE_API_URL # Se for Next.js/outro, mude o nome da variável se necessário
+      - key: VITE_API_URL
         fromService:
           name: classrpg-api
           type: web
@@ -50,4 +51,3 @@ databases:
     user: classrpg
     plan: free
     region: oregon
-
