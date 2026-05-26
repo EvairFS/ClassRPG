@@ -1,0 +1,50 @@
+services:
+  # Backend API Service
+  - type: web
+    name: classrpg-api
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: BCRYPT_ROUNDS
+        value: "10"
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  # Frontend Web Service
+  - type: web
+    name: classrpg-web
+    runtime: static
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        fromService:
+          name: classrpg-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+    autoDeploy: true
+
+# Database
+databases:
+  - name: classrpg-db
+    databaseName: classrpg
+    user: classrpg
+    plan: free
+    region: oregon
