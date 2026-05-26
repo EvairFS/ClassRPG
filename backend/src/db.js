@@ -1,5 +1,4 @@
 import pg from "pg";
-import postgres from "postgres";
 import { DB, DATABASE_URL, USE_DB_SSL } from "./config.js";
 
 const sslOptions = USE_DB_SSL ? { rejectUnauthorized: false } : false;
@@ -25,19 +24,6 @@ const poolConfig = DATABASE_URL
     };
 
 export const pool = new pg.Pool(poolConfig);
-
-const postgresConfig = DATABASE_URL
-  ? DATABASE_URL
-  : {
-      host: DB.host,
-      port: DB.port,
-      username: DB.user,
-      password: DB.password,
-      database: DB.database,
-      ssl: sslOptions,
-    };
-
-export const sql = postgres(postgresConfig);
 
 // Test connection on startup
 pool.query("SELECT 1").catch((err) => {
@@ -79,4 +65,4 @@ export function getClient() {
   return pool.connect();
 }
 
-// No default export — use named exports: `sql`, `pool`, `q`, `qOne`, etc.
+// No default export — use named exports: `pool`, `q`, `qOne`, `qWithCount`, `getClient`.

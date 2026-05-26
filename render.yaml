@@ -13,7 +13,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        # 👇 Vincula automaticamente a URL do banco de dados que está configurado abaixo
+        fromDatabase:
+          name: classrpg-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: BCRYPT_ROUNDS
@@ -24,13 +27,13 @@ services:
   # Frontend Web Service
   - type: web
     name: classrpg-web
-    runtime: static
+    runtime: static # 👈 Ajustado: para sites estáticos no Render, o runtime é "static"
     region: oregon
     plan: free
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: frontend/dist
+    staticPublishPath: dist # 👈 Ajustado: Como o rootDir já é "frontend", o caminho aqui é relativo a ele
     envVars:
       - key: NODE_ENV
         value: production
