@@ -16,7 +16,11 @@ function required(key, fallback) {
 
 export const PORT = Number(env("PORT", "3001"));
 
-export const DATABASE_URL = env("DATABASE_URL", env("SUPABASE_DB_URL", undefined));
+// Prefer explicit Supabase Session Pooler URL when provided.
+export const DATABASE_URL = env(
+  "SUPABASE_POOLER_URL",
+  env("DATABASE_URL", env("SUPABASE_DB_URL", undefined)),
+);
 
 export const DB = DATABASE_URL
   ? null
