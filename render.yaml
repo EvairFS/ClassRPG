@@ -1,29 +1,4 @@
-services:
-  # Backend API Service
-  - type: web
-    name: classrpg-api
-    runtime: node
-    region: oregon
-    plan: free
-    branch: main
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: classrpg-db
-          property: connectionString
-      - key: JWT_SECRET
-        generateValue: true
-      - key: BCRYPT_ROUNDS
-        value: "10"
-    healthCheckPath: /api/health
-    autoDeploy: true
-
-  # Frontend Web Service (Ajustado para TanStack Start / Lovable)
+# Frontend Web Service (Ajustado para TanStack Start / Lovable)
   - type: web
     name: classrpg-web
     runtime: node
@@ -35,29 +10,21 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      # 🔗 Aponta a URL base do front diretamente para a URL externa gerada pelo Render para a sua API
+      # 👇 LIMITADOR DE MEMÓRIA PARA O PLANO FREE DO RENDER DOIS DOIS LADOS (BUILD E START)
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=400"
       - key: VITE_API_URL
         fromService:
           name: classrpg-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
-      # 🔗 Cópia de segurança caso o Lovable use o termo sem o prefixo VITE_
       - key: API_URL
         fromService:
           name: classrpg-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
-      # 👇 Mantendo as liberações de Host que já funcionaram
       - key: VITE_ALLOWED_HOSTS
         value: '["classrpg-web.onrender.com"]'
       - key: ALLOWED_HOSTS
         value: '["classrpg-web.onrender.com"]'
     autoDeploy: true
-
-# Database
-databases:
-  - name: classrpg-db
-    databaseName: classrpg
-    user: classrpg
-    plan: free
-    region: oregon
