@@ -13,6 +13,10 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // 👇 ADICIONE ESTE BLOCO AQUI PARA LIBERAR O HOST NO RENDER
+    preview: {
+      allowedHosts: ["classrpg-web.onrender.com"]
+    },
     server: {
       proxy: {
         "/api": {
