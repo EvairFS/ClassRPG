@@ -35,12 +35,19 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # 🔗 Aponta a URL base do front diretamente para a URL externa gerada pelo Render para a sua API
       - key: VITE_API_URL
         fromService:
           name: classrpg-api
           type: web
           envVarKey: RENDER_EXTERNAL_URL
-      # 👇 Liberação total de segurança para o Preview do Vite no Render
+      # 🔗 Cópia de segurança caso o Lovable use o termo sem o prefixo VITE_
+      - key: API_URL
+        fromService:
+          name: classrpg-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      # 👇 Mantendo as liberações de Host que já funcionaram
       - key: VITE_ALLOWED_HOSTS
         value: '["classrpg-web.onrender.com"]'
       - key: ALLOWED_HOSTS
