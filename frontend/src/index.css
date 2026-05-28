@@ -1,73 +1,78 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: 240 20% 4%;
-    --foreground: 240 10% 90%;
+@theme {
+  --color-background: oklch(0.12 0.02 250);
+  --color-foreground: oklch(0.90 0.01 250);
 
-    --card: 220 18% 14%;
-    --card-foreground: 240 10% 90%;
+  --color-card: oklch(0.18 0.02 230);
+  --color-card-foreground: oklch(0.90 0.01 250);
 
-    --popover: 220 18% 14%;
-    --popover-foreground: 240 10% 90%;
+  --color-popover: oklch(0.18 0.02 230);
+  --color-popover-foreground: oklch(0.90 0.01 250);
 
-    --primary: 220 80% 58%;
-    --primary-foreground: 0 0% 100%;
+  --color-primary: oklch(0.60 0.18 250);
+  --color-primary-foreground: oklch(1 0 0);
 
-    --secondary: 220 18% 18%;
-    --secondary-foreground: 240 10% 90%;
+  --color-secondary: oklch(0.22 0.02 230);
+  --color-secondary-foreground: oklch(0.90 0.01 250);
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 240 10% 55%;
+  --color-muted: oklch(0.24 0.02 230);
+  --color-muted-foreground: oklch(0.55 0.01 250);
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 240 20% 4%;
+  --color-accent: oklch(0.78 0.17 70);
+  --color-accent-foreground: oklch(0.12 0.02 250);
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-destructive-foreground: oklch(1 0 0);
 
-    --border: 220 18% 22%;
-    --input: 220 18% 22%;
-    --ring: 220 80% 58%;
+  --color-border: oklch(0.26 0.02 230);
+  --color-input: oklch(0.26 0.02 230);
+  --color-ring: oklch(0.60 0.18 250);
 
-    --radius: 0px;
+  --color-sidebar: oklch(0.15 0.02 230);
+  --color-sidebar-foreground: oklch(0.90 0.01 250);
+  --color-sidebar-primary: oklch(0.60 0.18 250);
+  --color-sidebar-primary-foreground: oklch(1 0 0);
+  --color-sidebar-accent: oklch(0.22 0.02 230);
+  --color-sidebar-accent-foreground: oklch(0.90 0.01 250);
+  --color-sidebar-border: oklch(0.26 0.02 230);
+  --color-sidebar-ring: oklch(0.60 0.18 250);
 
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 240 10% 90%;
-    --sidebar-primary: 220 80% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 18% 18%;
-    --sidebar-accent-foreground: 240 10% 90%;
-    --sidebar-border: 220 18% 22%;
-    --sidebar-ring: 220 80% 58%;
-  }
+  --radius: 0px;
+
+  --font-display: "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    border-color: var(--color-border);
   }
 
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display uppercase tracking-wider;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 }
 
 @layer utilities {
   .text-gold {
-    color: hsl(var(--accent));
+    color: var(--color-accent);
   }
 
   .border-gold {
-    border-color: hsl(var(--accent));
+    border-color: var(--color-accent);
   }
 
   .bg-gold {
-    background-color: hsl(var(--accent));
+    background-color: var(--color-accent);
   }
 }
 
@@ -76,62 +81,38 @@
 }
 
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes beam-reveal {
-  0% { transform: scaleX(0); opacity: 0; }
-  30% { transform: scaleX(0.01); opacity: 1; }
+  0%   { transform: scaleX(0); opacity: 0; }
+  30%  { transform: scaleX(0.01); opacity: 1; }
   100% { transform: scaleX(1); opacity: 1; }
 }
 
 @keyframes etch-in {
-  0% { opacity: 0; letter-spacing: 0.5em; }
+  0%   { opacity: 0; letter-spacing: 0.5em; }
   100% { opacity: 1; letter-spacing: 0.2em; }
 }
 
 @keyframes crack-out {
-  0% { opacity: 1; transform: scale(1); }
+  0%   { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.2); filter: blur(4px); }
 }
 
 @keyframes xp-pop {
-  0% { opacity: 0; transform: translateY(0) scale(0.5); }
-  50% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+  50%  { opacity: 1; transform: translateY(-20px) scale(1.2); }
   100% { opacity: 0; transform: translateY(-40px) scale(1); }
 }
 
-.animate-fade-up {
-  animation: fade-up 0.5s ease-out forwards;
-}
-
-.animate-xp-fill {
-  animation: xp-fill 1s ease-out forwards;
-}
-
-.animate-beam {
-  animation: beam-reveal 0.8s ease-out forwards;
-}
-
-.animate-etch {
-  animation: etch-in 0.6s ease-out 0.8s forwards;
-  opacity: 0;
-}
-
-.animate-crack {
-  animation: crack-out 0.5s ease-in forwards;
-}
-
-.animate-xp-pop {
-  animation: xp-pop 1.5s ease-out forwards;
-}
+.animate-fade-up  { animation: fade-up 0.5s ease-out forwards; }
+.animate-xp-fill  { animation: xp-fill 1s ease-out forwards; }
+.animate-beam     { animation: beam-reveal 0.8s ease-out forwards; }
+.animate-etch     { animation: etch-in 0.6s ease-out 0.8s forwards; opacity: 0; }
+.animate-crack    { animation: crack-out 0.5s ease-in forwards; }
+.animate-xp-pop   { animation: xp-pop 1.5s ease-out forwards; }
 
 .stagger-1 { animation-delay: 0.1s; }
 .stagger-2 { animation-delay: 0.2s; }
