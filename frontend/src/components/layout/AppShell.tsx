@@ -1,4 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import {
   BarChart3,
   Bell,
@@ -15,7 +17,6 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { CURRENT_STUDENT, MOCK_NOTIFICATIONS } from "@/data/mockData";
 import type { UserRole } from "@/types";
 
 interface AppShellProps {
@@ -51,7 +52,28 @@ const ROLE_LABEL: Record<UserRole, string> = {
 export function AppShell({ role, title, children }: AppShellProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = NAV[role];
-  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+
+  const { data: currentStudent } = useQuery(
+    ["currentStudent"],
+    api.getCurrentStudent,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const { data: notifications = [] } = useQuery(
+    ["notifications"],
+    api.getNotifications,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const unread = notifications.filter((n: any) => !n.read).length;
+  const studentName = currentStudent?.name || "Aluno";
+  const studentAvatar = currentStudent?.avatar || "?";
 
   return (
     <div className="flex min-h-screen">
@@ -109,11 +131,11 @@ export function AppShell({ role, title, children }: AppShellProps) {
         <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 text-[11px] font-semibold ring-1 ring-white/15">
-              {role === "student" ? CURRENT_STUDENT.avatar : "RV"}
+              {role === "student" ? studentAvatar : "RV"}
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-foreground">
-                {role === "student" ? CURRENT_STUDENT.name : "Renata V."}
+                {role === "student" ? studentName : "Renata V."}
               </p>
               <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
             </div>

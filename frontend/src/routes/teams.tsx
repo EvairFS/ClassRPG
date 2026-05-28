@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
-import { CURRENT_STUDENT, MOCK_STUDENTS, MOCK_TEAMS } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Crown, Flame, Shield, Trophy, Users } from "lucide-react";
 
@@ -15,12 +16,27 @@ export const Route = createFileRoute("/teams")({
 });
 
 function TeamsPage() {
-  const myTeam = MOCK_TEAMS.find((t) => t.id === CURRENT_STUDENT.teamId) ?? MOCK_TEAMS[0];
-  const ranking = [...MOCK_TEAMS].sort((a, b) => b.xp - a.xp);
-  const myTeamMembers = (myTeam.memberIds ?? [])
-    .map((id) => MOCK_STUDENTS.find((s) => s.id === id))
-    .filter((s): s is (typeof MOCK_STUDENTS)[number] => !!s)
-    .sort((a, b) => b.xp - a.xp);
+  const { data: teams = [] } = useQuery(["teams"], api.getTeams, {
+      retry: false,
+    staleTime: 1000 * 60,
+  });
+
+  const { data: currentStudent } = useQuery(["currentStudent"], api.getCurrentStudent, {
+      retry: false,
+      staleTime: 1000 * 60,
+  });
+
+  const { data: students = [] } = useQuery(["students"], api.getStudents, {
+    retry: false,
+    staleTime: 1000 * 60,
+  });
+
+  const myTeam = teams.find((t: any) => t.id === currentStudent?.teamId) ?? teams[0];
+  const ranking = [...teams].sort((a: any, b: any) => b.xp - a.xp);
+  const myTeamMembers = (myTeam?.memberIds ?? [])
+    .map((id: string) => students.find((s: any) => s.id === id))
+    .filter((s: any): s is any => !!s)
+    .sort((a: any, b: any) => b.xp - a.xp);
 
   return (
     <AppShell role="student" title="Equipes">
@@ -30,18 +46,28 @@ function TeamsPage() {
           <div className="pointer-events-none absolute -bottom-24 left-0 size-72 rounded-full bg-secondary/20 blur-3xl" />
           <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
             <div className="grid size-24 shrink-0 place-items-center rounded-3xl bg-gradient-to-br from-primary/50 to-secondary/50 text-5xl ring-1 ring-white/20">
-              {myTeam.emblem}
+              {myTeam?.emblem}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Sua equipe</p>
-              <h2 className="mt-1 text-2xl font-bold text-foreground">{myTeam.name}</h2>
-              {myTeam.motto && (
+              <h2 className="mt-1 text-2xl font-bold text-foreground">{myTeam?.name}</h2>
+              {myTeam?.motto && (
                 <p className="mt-1 text-sm italic text-muted-foreground">"{myTeam.motto}"</p>
               )}
               <div className="mt-4 grid grid-cols-3 gap-3">
-                <Mini label="Membros" value={myTeam.members} icon={Users} tint="text-primary" />
-                <Mini label="XP total" value={myTeam.xp.toLocaleString("pt-BR")} icon={Trophy} tint="text-accent" />
-                <Mini label="Semana" value={`+${myTeam.weeklyXp?.toLocaleString("pt-BR") ?? 0}`} icon={Flame} tint="text-rose-300" />
+                <Mini label="Membros" value={myTeam?.members} icon={Users} tint="text-primary" />
+                <Mini
+                  label="XP total"
+                  value={myTeam?.xp.toLocaleString("pt-BR")}
+                  icon={Trophy}
+                  tint="text-accent"
+                />
+                <Mini
+                  label="Semana"
+                  value={`+${myTeam?.weeklyXp?.toLocaleString("pt-BR") ?? 0}`}
+                  icon={Flame}
+                  tint="text-rose-300"
+                />
               </div>
             </div>
           </div>
@@ -65,9 +91,10 @@ function TeamsPage() {
                       isMine && "bg-primary/10",
                     )}
                   >
-                    <span className={cn(
-                      "inline-flex size-7 items-center justify-center rounded-full text-xs font-bold tabular-nums",
-                      i === 0 ? "bg-accent/20 text-accent" : "text-muted-foreground",
+                    <span
+                      className={cn(
+                        "inline-flex size-7 items-center justify-center rounded-full text-xs font-bold tabular-nums",
+                        i === 0 ? "bg-accent/20 text-accent" : "text-muted-foreground",
                     )}>
                       {i === 0 ? <Crown className="size-3.5" /> : i + 1}
                     </span>
@@ -77,7 +104,11 @@ function TeamsPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-foreground">
                         {t.name}
-                        {isMine && <span className="ml-2 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">sua</span>}
+                        {isMine && (
+                          <span className="ml-2 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            sua
+                          </span>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">{t.members} membros</p>
                     </div>
@@ -133,7 +164,17 @@ function TeamsPage() {
   );
 }
 
-function Mini({ label, value, icon: Icon, tint }: { label: string; value: string | number; icon: React.ElementType; tint: string }) {
+function Mini({
+  label,
+  value,
+  icon: Icon,
+  tint,
+}: {
+  label: string;
+  value: string | number;
+  icon: React.ElementType;
+  tint: string;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-center">
       <Icon className={`mx-auto mb-1 size-4 ${tint}`} />

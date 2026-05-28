@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import LevelUpModal from "@/components/LevelUpModal";
 import { Button } from "@/components/ui/button";
-import { MOCK_ACTIVITIES, getLevelInfo, CURRENT_STUDENT } from "@/data/mockData";
+import { api } from "@/api";
+import { getLevelInfo } from "@/lib/gamification";
 import { ArrowLeft } from "lucide-react";
 
 const ActivityPage = () => {
@@ -13,13 +15,30 @@ const ActivityPage = () => {
   const [showXpPop, setShowXpPop] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
 
-  const activity = MOCK_ACTIVITIES.find((a) => a.id === id);
-  const info = getLevelInfo(CURRENT_STUDENT.xp);
+  const { data: activity, isLoading } = useQuery(
+    ["activity", id],
+    () => api.getActivity(id!),
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
 
-  if (!activity) {
+  const { data: currentStudent } = useQuery(
+    ["currentStudent"],
+    api.getCurrentStudent,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const info = getLevelInfo(currentStudent?.xp || 0);
+
+  if (isLoading || !activity) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground font-body">Atividade não encontrada.</p>
+        <p className="text-muted-foreground font-body">Carregando atividade...</p>
       </div>
     );
   }
@@ -28,7 +47,6 @@ const ActivityPage = () => {
     setSubmitted(true);
     setShowXpPop(true);
     setTimeout(() => setShowXpPop(false), 1500);
-    // Simulate level up
     if (activity.id === "4") {
       setTimeout(() => setShowLevelUp(true), 1600);
     }

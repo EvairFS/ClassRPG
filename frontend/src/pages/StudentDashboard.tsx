@@ -7,7 +7,8 @@ import ActivityCard from "@/components/ActivityCard";
 import RankingTable from "@/components/RankingTable";
 import LevelUpModal from "@/components/LevelUpModal";
 import { api } from "@/api";
-import { CURRENT_STUDENT, MOCK_ACTIVITIES, MOCK_BADGES, MOCK_STUDENTS, getLevelInfo } from "@/data/mockData";
+import { CURRENT_STUDENT, MOCK_ACTIVITIES, MOCK_STUDENTS } from "@/data/mockData";
+import { getLevelInfo } from "@/lib/gamification";
 
 const StudentDashboard = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -27,8 +28,23 @@ const StudentDashboard = () => {
     staleTime: 1000 * 60,
   });
 
-  const me = currentStudent ?? CURRENT_STUDENT;
-  const studentList = students ?? MOCK_STUDENTS;
+  const { data: activities, isLoading: isActivitiesLoading } = useQuery(
+    ["activities"],
+    api.getActivities,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const me = currentStudent || {
+    id: "",
+    name: "Carregando...",
+    avatar: "?",
+    xp: 0,
+  };
+  const studentList = students || [];
+  const activityList = activities || MOCK_ACTIVITIES;
   const info = getLevelInfo(me.xp);
 
   const handleSubmit = (activityId: string) => {
@@ -90,7 +106,7 @@ const StudentDashboard = () => {
             Atividades
           </h2>
           <div className="space-y-3">
-            {MOCK_ACTIVITIES.map((activity) => (
+            {activityList.map((activity) => (
               <ActivityCard key={activity.id} activity={activity} showSubmit onSubmit={handleSubmit} />
             ))}
           </div>

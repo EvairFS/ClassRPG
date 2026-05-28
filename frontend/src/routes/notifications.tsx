@@ -1,10 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
-import { MOCK_NOTIFICATIONS } from "@/data/mockData";
 import type { NotificationItem } from "@/types";
 import { cn } from "@/lib/utils";
-import { Bell, CheckCheck, MessageSquare, Settings, Sparkles, Target, Trophy, Trash2 } from "lucide-react";
+import {
+  Bell,
+  CheckCheck,
+  MessageSquare,
+  Settings,
+  Sparkles,
+  Target,
+  Trophy,
+  Trash2,
+} from "lucide-react";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
@@ -43,13 +53,19 @@ const TINT: Record<NotificationItem["type"], string> = {
 
 function NotificationsPage() {
   const [filter, setFilter] = useState<NotificationItem["type"] | "all">("all");
-  const [items, setItems] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+
+  const { data: notifications = [] } = useQuery(["notifications"], api.getNotifications, {
+    retry: false,
+    staleTime: 1000 * 60,
+  });
+
+  const [items, setItems] = useState<NotificationItem[]>(notifications);
 
   const list = useMemo(
-    () => (filter === "all" ? items : items.filter((n) => n.type === filter)),
+    () => (filter === "all" ? items : items.filter((n: any) => n.type === filter)),
     [filter, items],
   );
-  const unread = items.filter((n) => !n.read).length;
+  const unread = items.filter((n: any) => !n.read).length;
 
   return (
     <AppShell role="student" title="Notificações">
@@ -102,7 +118,9 @@ function NotificationsPage() {
         {list.length === 0 ? (
           <div className="glass rounded-2xl p-10 text-center">
             <Bell className="mx-auto mb-3 size-8 text-muted-foreground/60" />
-            <p className="text-sm text-muted-foreground">Tudo em dia, aventureiro. Nada para ler aqui.</p>
+            <p className="text-sm text-muted-foreground">
+              Tudo em dia, aventureiro. Nada para ler aqui.
+            </p>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -119,7 +137,12 @@ function NotificationsPage() {
                     !n.read && "ring-1 ring-primary/30",
                   )}
                 >
-                  <div className={cn("grid size-10 shrink-0 place-items-center rounded-xl border", TINT[n.type])}>
+                  <div
+                    className={cn(
+                      "grid size-10 shrink-0 place-items-center rounded-xl border",
+                      TINT[n.type],
+                    )}
+                  >
                     <Icon className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -129,7 +152,9 @@ function NotificationsPage() {
                     </div>
                     <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{n.body}</p>
                   </div>
-                  <span className="shrink-0 text-[11px] text-muted-foreground/80">{n.createdAt}</span>
+                  <span className="shrink-0 text-[11px] text-muted-foreground/80">
+                    {n.createdAt}
+                  </span>
                 </li>
               );
             })}

@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { MissionCard } from "@/components/gamification/MissionCard";
-import { MOCK_MISSIONS } from "@/data/mockData";
 import type { Mission } from "@/types";
 import { cn } from "@/lib/utils";
 import { Calendar, Sparkles, Swords, Target, Trophy, Zap } from "lucide-react";
@@ -28,10 +29,20 @@ const TABS: { value: Mission["type"] | "all"; label: string; icon: React.Element
 
 function MissionsPage() {
   const [tab, setTab] = useState<Mission["type"] | "all">("all");
-  const weeklyXp = MOCK_MISSIONS
-    .filter((m) => m.status === "completed")
-    .reduce((acc, m) => acc + m.xpReward, 0) + 540;
-  const list = tab === "all" ? MOCK_MISSIONS : MOCK_MISSIONS.filter((m) => m.type === tab);
+
+  const { data: missions = [] } = useQuery(
+    ["missions"],
+    api.getMissions,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const weeklyXp = missions
+    .filter((m: any) => m.status === "completed")
+    .reduce((acc: number, m: any) => acc + m.xpReward, 0) + 540;
+  const list = tab === "all" ? missions : missions.filter((m: any) => m.type === tab);
 
   return (
     <AppShell role="student" title="Missões">

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CURRENT_STUDENT } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { getLevelInfo } from "@/lib/gamification";
 import XPBar from "@/components/XPBar";
 import { LogOut, Menu, X } from "lucide-react";
@@ -13,7 +14,20 @@ const Navbar = ({ userType }: NavbarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const info = getLevelInfo(CURRENT_STUDENT.xp);
+
+  const { data: currentStudent, isLoading } = useQuery(["currentStudent"], api.getCurrentStudent, {
+    retry: false,
+    staleTime: 1000 * 60,
+  });
+
+  const student = currentStudent || {
+    id: "",
+    name: "Carregando...",
+    avatar: "?",
+    xp: 0,
+  };
+
+  const info = getLevelInfo(student.xp);
 
   const studentLinks = [
     { to: "/student", label: "Painel" },
@@ -64,15 +78,15 @@ const Navbar = ({ userType }: NavbarProps) => {
           <div className="hidden md:flex items-center gap-4">
             {userType === "student" && (
               <div className="w-48">
-                <XPBar xp={CURRENT_STUDENT.xp} showLabel={false} size="sm" />
+                <XPBar xp={student.xp} showLabel={false} size="sm" />
               </div>
             )}
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 border border-border flex items-center justify-center text-xs font-body font-semibold text-foreground">
-                {CURRENT_STUDENT.avatar}
+                {student.avatar}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-body text-foreground">{CURRENT_STUDENT.name}</span>
+                <span className="text-xs font-body text-foreground">{student.name}</span>
                 {userType === "student" && (
                   <span className="text-[10px] text-muted-foreground font-body">
                     Nv. {info.level} — {info.name}
@@ -111,7 +125,7 @@ const Navbar = ({ userType }: NavbarProps) => {
             ))}
             {userType === "student" && (
               <div className="pt-2">
-                <XPBar xp={CURRENT_STUDENT.xp} size="sm" />
+                <XPBar xp={student.xp} size="sm" />
               </div>
             )}
             <button

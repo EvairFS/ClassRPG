@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { AchievementCard } from "@/components/gamification/AchievementCard";
-import { MOCK_ACHIEVEMENTS } from "@/data/mockData";
 import { RARITY_META } from "@/lib/gamification";
 import { cn } from "@/lib/utils";
 import type { Achievement } from "@/types";
@@ -23,10 +24,18 @@ const RARITY_ORDER: Achievement["rarity"][] = ["legendary", "epic", "rare", "com
 
 function AchievementsPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("Todas");
-  const total = MOCK_ACHIEVEMENTS.length;
-  const earned = MOCK_ACHIEVEMENTS.filter((a) => a.earned).length;
 
-  const list = MOCK_ACHIEVEMENTS.filter((a) =>
+  const { data: achievements = [] } = useQuery<Achievement[]>({
+    queryKey: ["achievements"],
+    queryFn: api.getAchievements,
+    retry: false,
+    staleTime: 1000 * 60,
+  });
+
+  const total = achievements.length;
+  const earned = achievements.filter((a: Achievement) => a.earned).length;
+
+  const list = achievements.filter((a: Achievement) =>
     filter === "Todas" ? true : filter === "Conquistadas" ? a.earned : !a.earned,
   );
 

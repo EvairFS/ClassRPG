@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { DifficultyBadge } from "@/components/gamification/DifficultyBadge";
-import { MOCK_ACTIVITIES } from "@/data/mockData";
 import type { ActivityItem } from "@/types";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Clock, Trophy } from "lucide-react";
@@ -28,13 +29,22 @@ function ActivitiesPage() {
   const [status, setStatus] = useState<ActivityItem["status"] | "all">("all");
   const [subject, setSubject] = useState<string>("all");
 
-  const subjects = useMemo(
-    () => ["all", ...Array.from(new Set(MOCK_ACTIVITIES.map((a) => a.subject)))],
-    [],
+  const { data: activities = [] } = useQuery(
+    ["activities"],
+    api.getActivities,
+    {
+      retry: false,
+      staleTime: 1000 * 60,
+    }
   );
 
-  const list = MOCK_ACTIVITIES.filter(
-    (a) =>
+  const subjects = useMemo(
+    () => ["all", ...Array.from(new Set(activities.map((a: any) => a.subject)))],
+    [activities],
+  );
+
+  const list = activities.filter(
+    (a: any) =>
       (status === "all" || a.status === status) && (subject === "all" || a.subject === subject),
   );
 
@@ -78,7 +88,7 @@ function ActivitiesPage() {
         </header>
 
         <ul className="space-y-3">
-          {list.map((a, i) => (
+          {list.map((a: any, i: number) => (
             <li key={a.id} className={`animate-fade-up stagger-${(i % 5) + 1}`}>
               <Link
                 to="/activity/$id"
