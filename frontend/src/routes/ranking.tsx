@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { RankingTable } from "@/components/gamification/RankingTable";
 import { PatentBadge } from "@/components/gamification/PatentBadge";
-import { CURRENT_STUDENT, MOCK_STUDENTS } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { ArrowUp, Crown, Medal, Trophy } from "lucide-react";
 
@@ -23,9 +24,20 @@ const SCOPES = ["Minha turma", "Escola", "Brasil"] as const;
 function RankingPage() {
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>("Semana");
   const [scope, setScope] = useState<(typeof SCOPES)[number]>("Minha turma");
-  const sorted = [...MOCK_STUDENTS].sort((a, b) => b.xp - a.xp);
+
+  const { data: students = [] } = useQuery({
+    queryKey: ["students"],
+    queryFn: api.getStudents,
+  });
+
+  const { data: me } = useQuery({
+    queryKey: ["currentStudent"],
+    queryFn: api.getCurrentStudent,
+  });
+
+  const sorted = [...students].sort((a, b) => b.xp - a.xp);
   const top3 = sorted.slice(0, 3);
-  const myIndex = sorted.findIndex((s) => s.id === CURRENT_STUDENT.id);
+  const myIndex = me ? sorted.findIndex((s) => s.id === me.id) : -1;
 
   return (
     <AppShell role="student" title="Ranking">
@@ -48,7 +60,7 @@ function RankingPage() {
         </section>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
-          <RankingTable students={sorted} currentUserId={CURRENT_STUDENT.id} />
+          <RankingTable students={sorted} currentUserId={me?.id} />
           <aside className="glass relative overflow-hidden rounded-2xl p-5">
             <div className="pointer-events-none absolute -top-16 right-0 size-40 rounded-full bg-primary/25 blur-3xl" />
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Sua posição</p>
@@ -60,11 +72,11 @@ function RankingPage() {
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>XP {period.toLowerCase()}</span>
-                <span className="font-semibold text-foreground">{CURRENT_STUDENT.xp.toLocaleString("pt-BR")}</span>
+                <span className="font-semibold text-foreground">{me?.xp.toLocaleString("pt-BR")}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Falta para o top 3</span>
-                <span className="font-semibold text-accent">+{Math.max(0, top3[2].xp - CURRENT_STUDENT.xp + 1).toLocaleString("pt-BR")} XP</span>
+                <span className="font-semibold text-accent">+{me && top3[2] ? Math.max(0, top3[2].xp - me.xp + 1).toLocaleString("pt-BR") : 0} XP</span>
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-muted-foreground">

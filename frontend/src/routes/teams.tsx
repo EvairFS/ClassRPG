@@ -128,7 +128,7 @@ function TeamsPage() {
             <h3 className="text-base font-semibold text-foreground">Companheiros de batalha</h3>
             <ul className="space-y-2">
               {myTeamMembers.map((s) => {
-                const isMe = s.id === CURRENT_STUDENT.id;
+                const isMe = s.id === currentStudent?.id;
                 return (
                   <li
                     key={s.id}

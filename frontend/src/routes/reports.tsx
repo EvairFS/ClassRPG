@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatsCard } from "@/components/gamification/StatsCard";
 import { ProgressChart } from "@/components/charts/ProgressChart";
@@ -6,9 +8,6 @@ import { EngagementChart } from "@/components/charts/EngagementChart";
 import { SkillsRadar } from "@/components/charts/SkillsRadar";
 import { GrowthChart } from "@/components/charts/GrowthChart";
 import { Button } from "@/components/ui/button";
-import {
-  CLASS_ENGAGEMENT, MOCK_STUDENTS, PLATFORM_GROWTH, STUDENT_PERF_WEEK, STUDENT_SKILLS_RADAR,
-} from "@/data/mockData";
 import { Award, BookOpen, Download, Sparkles, Users } from "lucide-react";
 
 export const Route = createFileRoute("/reports")({
@@ -22,9 +21,21 @@ export const Route = createFileRoute("/reports")({
 });
 
 function ReportsPage() {
-  const top = [...MOCK_STUDENTS].sort((a, b) => b.xp - a.xp).slice(0, 8);
-  const avgXp = Math.round(MOCK_STUDENTS.reduce((s, x) => s + x.xp, 0) / MOCK_STUDENTS.length);
-  const totalXp = MOCK_STUDENTS.reduce((s, x) => s + x.xp, 0);
+  const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: api.getStudents });
+  
+  const { data: classEngagement = [] } = useQuery({ 
+    queryKey: ["chart-engagement"], 
+    queryFn: () => fetch("/api/charts/class-engagement").then(res => res.json()) 
+  });
+  const { data: platformGrowth = [] } = useQuery({ 
+    queryKey: ["chart-growth"], 
+    queryFn: () => fetch("/api/charts/platform-growth").then(res => res.json()) 
+  });
+
+  const top = [...students].sort((a, b) => b.xp - a.xp).slice(0, 8);
+  const studentCount = students.length || 1;
+  const totalXp = students.reduce((s, x) => s + x.xp, 0);
+  const avgXp = Math.round(totalXp / studentCount);
 
   return (
     <AppShell role="teacher" title="Relatórios">
@@ -44,7 +55,7 @@ function ReportsPage() {
           <StatsCard label="Engajamento" value="87%" delta={4} icon={Sparkles} tint="primary" />
           <StatsCard label="Missões/aluno" value={18} delta={9} icon={BookOpen} tint="secondary" />
           <StatsCard label="XP distribuído" value={totalXp.toLocaleString("pt-BR")} delta={12} icon={Award} tint="accent" />
-          <StatsCard label="Alunos ativos" value={MOCK_STUDENTS.length} delta={6} icon={Users} tint="muted" />
+          <StatsCard label="Alunos ativos" value={students.length} delta={6} icon={Users} tint="muted" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -53,13 +64,7 @@ function ReportsPage() {
               <h3 className="text-base font-semibold text-foreground">Engajamento semanal</h3>
               <p className="text-xs text-muted-foreground">Alunos ativos × entregas</p>
             </header>
-            <EngagementChart data={CLASS_ENGAGEMENT} />
-          </section>
-          <section className="glass rounded-2xl p-5">
-            <header className="mb-4">
-              <h3 className="text-base font-semibold text-foreground">Habilidades médias</h3>
-            </header>
-            <SkillsRadar data={STUDENT_SKILLS_RADAR} />
+            <EngagementChart data={classEngagement} />
           </section>
         </div>
 
@@ -68,14 +73,14 @@ function ReportsPage() {
             <header className="mb-4">
               <h3 className="text-base font-semibold text-foreground">XP médio diário</h3>
             </header>
-            <ProgressChart data={STUDENT_PERF_WEEK} />
+            <ProgressChart data={[]} />
           </section>
           <section className="xl:col-span-2 glass rounded-2xl p-5">
             <header className="mb-4">
               <h3 className="text-base font-semibold text-foreground">Crescimento histórico</h3>
               <p className="text-xs text-muted-foreground">Alunos, escolas e professores ativos</p>
             </header>
-            <GrowthChart data={PLATFORM_GROWTH} />
+            <GrowthChart data={platformGrowth} />
           </section>
         </div>
 

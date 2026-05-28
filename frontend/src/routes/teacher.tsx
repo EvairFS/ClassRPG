@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/api";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatsCard } from "@/components/gamification/StatsCard";
 import { RankingTable } from "@/components/gamification/RankingTable";
 import { EngagementChart } from "@/components/charts/EngagementChart";
 import { ProgressChart } from "@/components/charts/ProgressChart";
 import { MissionCard } from "@/components/gamification/MissionCard";
-import {
-  CLASS_ENGAGEMENT, CURRENT_TEACHER, MOCK_ACTIVITIES, MOCK_MISSIONS, MOCK_STUDENTS, STUDENT_PERF_WEEK,
-} from "@/data/mockData";
 import { Award, BookOpen, MessageSquare, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DifficultyBadge } from "@/components/gamification/DifficultyBadge";
@@ -15,8 +14,15 @@ import { DifficultyBadge } from "@/components/gamification/DifficultyBadge";
 export const Route = createFileRoute("/teacher")({ component: TeacherDashboard });
 
 function TeacherDashboard() {
-  const t = CURRENT_TEACHER;
-  const avgXp = Math.round(MOCK_STUDENTS.reduce((s, x) => s + x.xp, 0) / MOCK_STUDENTS.length);
+  const { data: t } = useQuery({ queryKey: ["currentTeacher"], queryFn: () => api.getTeachers().then(ts => ts[0]) });
+  const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: api.getStudents });
+  const { data: missions = [] } = useQuery({ queryKey: ["missions"], queryFn: api.getMissions });
+  const { data: activities = [] } = useQuery({ queryKey: ["activities"], queryFn: api.getActivities });
+
+  if (!t) return null;
+  
+  const avgXp = Math.round(students.reduce((s, x) => s + x.xp, 0) / (students.length || 1));
+
   return (
     <AppShell role="teacher" title={`Olá, Profa. ${t.name.split(" ")[0]}`}>
       <div className="space-y-6">
@@ -48,14 +54,11 @@ function TeacherDashboard() {
               <h2 className="text-base font-semibold text-foreground">Engajamento das turmas</h2>
               <p className="text-xs text-muted-foreground">Últimas 6 semanas</p>
             </header>
-            <EngagementChart data={CLASS_ENGAGEMENT} />
+            <EngagementChart data={[]} />
           </section>
           <section className="glass rounded-2xl p-5">
             <header className="mb-4">
-              <h2 className="text-base font-semibold text-foreground">XP médio diário</h2>
-              <p className="text-xs text-muted-foreground">Esta semana</p>
-            </header>
-            <ProgressChart data={STUDENT_PERF_WEEK} />
+              <ProgressChart data={[]} />
           </section>
         </div>
 
@@ -63,22 +66,22 @@ function TeacherDashboard() {
           <section className="xl:col-span-2 space-y-3">
             <h2 className="text-base font-semibold text-foreground">Missões publicadas</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {MOCK_MISSIONS.slice(0, 4).map((m) => <MissionCard key={m.id} mission={m} />)}
+              {missions.slice(0, 4).map((m) => <MissionCard key={m.id} mission={m} />)}
             </div>
           </section>
           <aside className="space-y-3">
             <h2 className="text-base font-semibold text-foreground">Top alunos</h2>
-            <RankingTable students={MOCK_STUDENTS} compact />
+            <RankingTable students={students} compact />
           </aside>
         </div>
 
         <section className="glass rounded-2xl p-5">
           <header className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Atividades em avaliação</h2>
-            <span className="text-xs text-muted-foreground">{MOCK_ACTIVITIES.length} itens</span>
+            <span className="text-xs text-muted-foreground">{activities.length} itens</span>
           </header>
           <ul className="divide-y divide-white/5">
-            {MOCK_ACTIVITIES.map((a) => (
+            {activities.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{a.title}</p>

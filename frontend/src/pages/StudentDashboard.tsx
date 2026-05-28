@@ -14,14 +14,14 @@ const StudentDashboard = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ amount: number; visible: boolean }>({ amount: 0, visible: false });
 
-  const { data: currentStudent, isLoading: isStudentLoading, isError: isStudentError } = useQuery(
-    ["currentStudent"],
-    api.getCurrentStudent,
-    {
+  const {
+    data: currentStudent,
+    isLoading: isStudentLoading,
+    isError: isStudentError,
+  } = useQuery(["currentStudent"], api.getCurrentStudent, {
       retry: false,
       staleTime: 1000 * 60,
-    }
-  );
+  });
 
   const { data: students, isLoading: isStudentsLoading } = useQuery(["students"], api.getStudents, {
     retry: false,
@@ -107,7 +107,12 @@ const StudentDashboard = () => {
           </h2>
           <div className="space-y-3">
             {activityList.map((activity) => (
-              <ActivityCard key={activity.id} activity={activity} showSubmit onSubmit={handleSubmit} />
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                showSubmit
+                onSubmit={handleSubmit}
+              />
             ))}
           </div>
         </section>
