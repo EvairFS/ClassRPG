@@ -1,4 +1,4 @@
-import { Badge as BadgeType } from "@/data/mockData";
+import type { Achievement as BadgeType } from "@/types";
 import { Star, Shield, Sword, Crown, Flame, Eye } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
