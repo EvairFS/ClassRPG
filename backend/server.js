@@ -30,7 +30,6 @@ const app = express();
 
 app.use(helmet());
 
-// CORS
 app.use(
   cors({
     origin: CORS_ORIGIN === "*" ? "*" : CORS_ORIGIN.split(","),
