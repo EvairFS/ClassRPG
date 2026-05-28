@@ -38,9 +38,7 @@ export function XPBar({
           <span className="tabular-nums text-muted-foreground">
             {info.inLevel}/{info.needed} XP
             {next && (
-              <span className="ml-2 text-[10px] text-muted-foreground/70">
-                → {next.name}
-              </span>
+              <span className="ml-2 text-[10px] text-muted-foreground/70">→ {next.name}</span>
             )}
           </span>
         </div>
@@ -55,8 +53,7 @@ export function XPBar({
           className="animate-xp-fill relative h-full rounded-full"
           style={{
             width: `${info.progress}%`,
-            background:
-              "linear-gradient(90deg, oklch(0.65 0.23 296), oklch(0.78 0.14 215))",
+            background: "linear-gradient(90deg, oklch(0.65 0.23 296), oklch(0.78 0.14 215))",
             boxShadow: "0 0 18px oklch(0.6 0.22 296 / .55)",
           }}
         >
