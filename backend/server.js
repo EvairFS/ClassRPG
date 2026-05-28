@@ -28,7 +28,6 @@ const app = express();
 // Global Middleware
 // ─────────────────────────────────────────────
 
-// Security headers
 app.use(helmet());
 
 // CORS
@@ -41,14 +40,11 @@ app.use(
   })
 );
 
-// Request logging
 app.use(morgan("dev"));
 
-// Body parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Global rate limiter
 const globalLimiter = rateLimit({
   windowMs: RATE_LIMIT.windowMs,
   max: RATE_LIMIT.max,
@@ -122,11 +118,13 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // ─────────────────────────────────────────────
-// Start Server
+// Servidor local (apenas fora da Vercel)
 // ─────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`⚔️  ClassRPG Backend rodando em http://localhost:${PORT}`);
-  console.log(`   Ambiente: ${process.env.NODE_ENV || "development"}`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`⚔️  ClassRPG Backend rodando em http://localhost:${PORT}`);
+    console.log(`   Ambiente: ${process.env.NODE_ENV || "development"}`);
+  });
+}
 
 export default app;
