@@ -16,8 +16,10 @@ export const Route = createFileRoute("/teams")({
 });
 
 function TeamsPage() {
-  const { data: teams = [] } = useQuery(["teams"], api.getTeams, {
-      retry: false,
+  const { data: teams = [] } = useQuery({
+    queryKey: ["teams"],
+    queryFn: api.getTeams,
+    retry: false,
     staleTime: 1000 * 60,
   });
 
