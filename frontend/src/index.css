@@ -1,78 +1,74 @@
 @import "tailwindcss";
+@config "../tailwind.config.ts";
 
-@theme {
-  --color-background: oklch(0.12 0.02 250);
-  --color-foreground: oklch(0.90 0.01 250);
+@layer base {
+  :root {
+    --background: 240 20% 4%;
+    --foreground: 240 10% 90%;
 
-  --color-card: oklch(0.18 0.02 230);
-  --color-card-foreground: oklch(0.90 0.01 250);
+    --card: 220 18% 14%;
+    --card-foreground: 240 10% 90%;
 
-  --color-popover: oklch(0.18 0.02 230);
-  --color-popover-foreground: oklch(0.90 0.01 250);
+    --popover: 220 18% 14%;
+    --popover-foreground: 240 10% 90%;
 
-  --color-primary: oklch(0.60 0.18 250);
-  --color-primary-foreground: oklch(1 0 0);
+    --primary: 220 80% 58%;
+    --primary-foreground: 0 0% 100%;
 
-  --color-secondary: oklch(0.22 0.02 230);
-  --color-secondary-foreground: oklch(0.90 0.01 250);
+    --secondary: 220 18% 18%;
+    --secondary-foreground: 240 10% 90%;
 
-  --color-muted: oklch(0.24 0.02 230);
-  --color-muted-foreground: oklch(0.55 0.01 250);
+    --muted: 220 15% 20%;
+    --muted-foreground: 240 10% 55%;
 
-  --color-accent: oklch(0.78 0.17 70);
-  --color-accent-foreground: oklch(0.12 0.02 250);
+    --accent: 38 92% 50%;
+    --accent-foreground: 240 20% 4%;
 
-  --color-destructive: oklch(0.55 0.22 25);
-  --color-destructive-foreground: oklch(1 0 0);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-  --color-border: oklch(0.26 0.02 230);
-  --color-input: oklch(0.26 0.02 230);
-  --color-ring: oklch(0.60 0.18 250);
+    --border: 220 18% 22%;
+    --input: 220 18% 22%;
+    --ring: 220 80% 58%;
 
-  --color-sidebar: oklch(0.15 0.02 230);
-  --color-sidebar-foreground: oklch(0.90 0.01 250);
-  --color-sidebar-primary: oklch(0.60 0.18 250);
-  --color-sidebar-primary-foreground: oklch(1 0 0);
-  --color-sidebar-accent: oklch(0.22 0.02 230);
-  --color-sidebar-accent-foreground: oklch(0.90 0.01 250);
-  --color-sidebar-border: oklch(0.26 0.02 230);
-  --color-sidebar-ring: oklch(0.60 0.18 250);
+    --radius: 0px;
 
-  --radius: 0px;
-
-  --font-display: "Inter", sans-serif;
-  --font-body: "Inter", sans-serif;
+    --sidebar-background: 220 18% 10%;
+    --sidebar-foreground: 240 10% 90%;
+    --sidebar-primary: 220 80% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 18% 18%;
+    --sidebar-accent-foreground: 240 10% 90%;
+    --sidebar-border: 220 18% 22%;
+    --sidebar-ring: 220 80% 58%;
+  }
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: hsl(var(--border));
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    -webkit-font-smoothing: antialiased;
+    @apply bg-background text-foreground font-body antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    @apply font-display uppercase tracking-wider;
   }
 }
 
 @layer utilities {
   .text-gold {
-    color: var(--color-accent);
+    color: hsl(var(--accent));
   }
 
   .border-gold {
-    border-color: var(--color-accent);
+    border-color: hsl(var(--accent));
   }
 
   .bg-gold {
-    background-color: var(--color-accent);
+    background-color: hsl(var(--accent));
   }
 }
 
