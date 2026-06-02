@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
   Bell,
@@ -15,7 +16,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { CURRENT_STUDENT, MOCK_NOTIFICATIONS } from "@/data/mockData";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { api } from "@/api";
 import type { UserRole } from "@/types";
 
 interface AppShellProps {
@@ -56,8 +58,27 @@ const ROLE_LABEL: Record<UserRole, string> = {
 
 export function AppShell({ role, title, children }: AppShellProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { user, token } = useCurrentUser();
   const items = NAV[role];
-  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
+
+  // Fetch notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => api.getNotifications(token!),
+    enabled: !!token,
+  });
+
+  // Fetch current user details
+  const { data: userDetails } = useQuery({
+    queryKey: ["current", role, user?.id],
+    queryFn: () =>
+      role === "student" ? api.getStudent(user!.id, token!) : api.getTeacher(user!.id, token!),
+    enabled: !!user?.id && !!token && role !== "admin",
+  });
+
+  const unread = notifications.filter((n) => !n.read).length;
+  const avatar = userDetails?.avatar || user?.name?.charAt(0) || "?";
+  const displayName = userDetails?.name || user?.name || "User";
 
   return (
     <div className="flex min-h-screen">
@@ -115,16 +136,10 @@ export function AppShell({ role, title, children }: AppShellProps) {
         <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 text-[11px] font-semibold ring-1 ring-white/15">
-              {role === "student" ? CURRENT_STUDENT.avatar : role === "teacher" ? "RV" : "AD"}
+              {avatar}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-foreground">
-                {role === "student"
-                  ? CURRENT_STUDENT.name
-                  : role === "teacher"
-                    ? "Renata V."
-                    : "Admin"}
-              </p>
+              <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
               <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
             </div>
           </div>

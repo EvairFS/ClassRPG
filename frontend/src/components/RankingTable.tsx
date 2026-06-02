@@ -1,4 +1,5 @@
-import { Student, getLevelInfo } from "@/data/mockData";
+import { Student } from "@/types";
+import { getLevelInfo } from "@/lib/gamification";
 
 interface RankingTableProps {
   students: Student[];
@@ -14,15 +15,9 @@ const RankingTable = ({ students, currentUserId, compact = false }: RankingTable
     <div className="w-full">
       {!compact && (
         <div className="flex justify-center gap-4 mb-8 items-end">
-          {sorted.length >= 2 && (
-            <PodiumSlot student={sorted[1]} position={2} height="h-24" />
-          )}
-          {sorted.length >= 1 && (
-            <PodiumSlot student={sorted[0]} position={1} height="h-32" />
-          )}
-          {sorted.length >= 3 && (
-            <PodiumSlot student={sorted[2]} position={3} height="h-20" />
-          )}
+          {sorted.length >= 2 && <PodiumSlot student={sorted[1]} position={2} height="h-24" />}
+          {sorted.length >= 1 && <PodiumSlot student={sorted[0]} position={1} height="h-32" />}
+          {sorted.length >= 3 && <PodiumSlot student={sorted[2]} position={3} height="h-20" />}
         </div>
       )}
       <div className="border border-border">
@@ -43,21 +38,31 @@ const RankingTable = ({ students, currentUserId, compact = false }: RankingTable
                 isCurrentUser ? "bg-primary/10 border-l-2 border-l-primary" : ""
               }`}
             >
-              <span className={`font-display text-sm ${isTop3 ? "text-accent" : "text-muted-foreground"}`}>
+              <span
+                className={`font-display text-sm ${isTop3 ? "text-accent" : "text-muted-foreground"}`}
+              >
                 {i + 1}
               </span>
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 flex items-center justify-center text-xs font-body font-semibold border ${
-                  isTop3 ? "border-accent text-accent" : "border-border text-foreground"
-                }`}>
+                <div
+                  className={`w-8 h-8 flex items-center justify-center text-xs font-body font-semibold border ${
+                    isTop3 ? "border-accent text-accent" : "border-border text-foreground"
+                  }`}
+                >
                   {student.avatar}
                 </div>
-                <span className={`font-body text-sm ${isTop3 && !compact ? "text-accent" : "text-foreground"}`}>
+                <span
+                  className={`font-body text-sm ${isTop3 && !compact ? "text-accent" : "text-foreground"}`}
+                >
                   {student.name}
                 </span>
               </div>
-              <span className="text-right text-xs text-muted-foreground font-body">{info.name}</span>
-              <span className={`text-right font-display text-sm ${isTop3 ? "text-accent" : "text-foreground"}`}>
+              <span className="text-right text-xs text-muted-foreground font-body">
+                {info.name}
+              </span>
+              <span
+                className={`text-right font-display text-sm ${isTop3 ? "text-accent" : "text-foreground"}`}
+              >
                 {student.xp}
               </span>
             </div>
@@ -68,7 +73,15 @@ const RankingTable = ({ students, currentUserId, compact = false }: RankingTable
   );
 };
 
-function PodiumSlot({ student, position, height }: { student: Student; position: number; height: string }) {
+function PodiumSlot({
+  student,
+  position,
+  height,
+}: {
+  student: Student;
+  position: number;
+  height: string;
+}) {
   const colors = {
     1: "border-accent text-accent",
     2: "border-muted-foreground text-muted-foreground",
@@ -78,11 +91,17 @@ function PodiumSlot({ student, position, height }: { student: Student; position:
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className={`w-12 h-12 flex items-center justify-center border-2 font-body font-semibold text-sm ${posColors}`}>
+      <div
+        className={`w-12 h-12 flex items-center justify-center border-2 font-body font-semibold text-sm ${posColors}`}
+      >
         {student.avatar}
       </div>
-      <span className={`font-body text-xs ${position === 1 ? "text-accent" : "text-foreground"}`}>{student.name}</span>
-      <div className={`w-20 ${height} border-t-2 ${posColors} bg-secondary flex items-center justify-center`}>
+      <span className={`font-body text-xs ${position === 1 ? "text-accent" : "text-foreground"}`}>
+        {student.name}
+      </span>
+      <div
+        className={`w-20 ${height} border-t-2 ${posColors} bg-secondary flex items-center justify-center`}
+      >
         <span className={`font-display text-2xl ${posColors}`}>{position}º</span>
       </div>
     </div>

@@ -12,3 +12,4 @@ dist/
 *~
 .coverage/
 coverage/
+frontend/MIGRATION_COMPLETE.md

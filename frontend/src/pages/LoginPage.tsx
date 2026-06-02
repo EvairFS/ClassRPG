@@ -2,16 +2,36 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { api } from "@/api";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<"student" | "teacher">("student");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(userType === "student" ? "/student" : "/teacher");
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await api.login(email, password, userType);
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({
+          token: response.token,
+          user: response.user,
+        })
+      );
+      navigate(userType === "student" ? "/student" : "/teacher");
+    } catch (err) {
+      setError("E-mail ou senha inválidos");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,6 +76,11 @@ const LoginPage = () => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded px-3 py-2 text-xs text-red-400">
+                {error}
+              </div>
+            )}
             <div>
               <label className="text-xs text-muted-foreground font-body tracking-wide block mb-2">
                 E-mail
@@ -66,6 +91,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="aventureiro@classrpg.com"
                 className="bg-secondary border-border text-foreground font-body"
+                disabled={loading}
               />
             </div>
             <div>
@@ -78,14 +104,16 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="bg-secondary border-border text-foreground font-body"
+                disabled={loading}
               />
             </div>
             <Button
               type="submit"
               className="w-full uppercase tracking-widest font-display text-xs"
               size="lg"
+              disabled={loading}
             >
-              Entrar na Aventura
+              {loading ? "Carregando..." : "Entrar na Aventura"}
             </Button>
           </form>
         </div>

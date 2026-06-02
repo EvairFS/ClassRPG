@@ -1,8 +1,8 @@
-import { Activity } from "@/data/mockData";
+import { ActivityItem } from "@/types";
 import { Button } from "@/components/ui/button";
 
 interface ActivityCardProps {
-  activity: Activity;
+  activity: ActivityItem;
   onSubmit?: (id: string) => void;
   showSubmit?: boolean;
 }
@@ -29,7 +29,8 @@ const ActivityCard = ({ activity, onSubmit, showSubmit = false }: ActivityCardPr
           {activity.title}
         </h3>
         <span
-          className={`text-xs font-body px-2 py-1 border ${activity.status === "completed"
+          className={`text-xs font-body px-2 py-1 border ${
+            activity.status === "completed"
               ? "border-border text-muted-foreground"
               : activity.status === "active"
                 ? "border-accent text-accent"

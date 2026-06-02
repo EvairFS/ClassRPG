@@ -37,7 +37,8 @@ export function AuthLayout({
               desenvolvida com qualidade SaaS para escolas modernas.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map((t) => (
+              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map(
+                (t) => (
                   <span
                     key={t}
                     className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80"

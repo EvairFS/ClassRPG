@@ -1,22 +1,70 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import LevelUpModal from "@/components/LevelUpModal";
 import { Button } from "@/components/ui/button";
-import { MOCK_ACTIVITIES, getLevelInfo, CURRENT_STUDENT } from "@/data/mockData";
+import { getLevelInfo } from "@/lib/gamification";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { api } from "@/api";
 import { ArrowLeft } from "lucide-react";
 
 const ActivityPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, token, isAuthenticated } = useCurrentUser();
   const [submitted, setSubmitted] = useState(false);
   const [showXpPop, setShowXpPop] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
 
-  const activity = MOCK_ACTIVITIES.find((a) => a.id === id);
-  const info = getLevelInfo(CURRENT_STUDENT.xp);
+  if (!isAuthenticated) {
+    navigate("/");
+    return null;
+  }
 
-  if (!activity) {
+  // Fetch activity
+  const {
+    data: activity,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["activity", id],
+    queryFn: () => api.getActivity(id!, token!),
+    enabled: !!id && !!token,
+  });
+
+  // Fetch student for level info
+  const { data: student } = useQuery({
+    queryKey: ["student", user?.id],
+    queryFn: () => api.getStudent(user!.id, token!),
+    enabled: !!user?.id && !!token,
+  });
+
+  // Submit activity mutation
+  const submitMutation = useMutation({
+    mutationFn: () => api.submitActivity(id!, token!),
+    onSuccess: () => {
+      setSubmitted(true);
+      setShowXpPop(true);
+      setTimeout(() => setShowXpPop(false), 1500);
+      if (id === "4") {
+        setTimeout(() => setShowLevelUp(true), 1600);
+      }
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar userType="student" />
+        <main className="container mx-auto px-4 py-8 max-w-2xl">
+          <p className="text-center text-muted-foreground">Carregando...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !activity) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground font-body">Atividade não encontrada.</p>
@@ -24,15 +72,7 @@ const ActivityPage = () => {
     );
   }
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setShowXpPop(true);
-    setTimeout(() => setShowXpPop(false), 1500);
-    // Simulate level up
-    if (activity.id === "4") {
-      setTimeout(() => setShowLevelUp(true), 1600);
-    }
-  };
+  const info = student ? getLevelInfo(student.xp) : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,11 +130,12 @@ const ActivityPage = () => {
 
             {!submitted && activity.status !== "graded" ? (
               <Button
-                onClick={handleSubmit}
+                onClick={() => submitMutation.mutate()}
                 className="uppercase tracking-widest font-display text-xs"
                 size="lg"
+                disabled={submitMutation.isPending}
               >
-                Entregar Atividade
+                {submitMutation.isPending ? "Entregando..." : "Entregar Atividade"}
               </Button>
             ) : (
               <span className="text-accent font-display text-sm tracking-wider">✓ Entregue</span>
