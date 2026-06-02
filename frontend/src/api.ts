@@ -8,7 +8,9 @@ import type {
   Team,
 } from "@/types";
 
-const BASE_URL = "http://localhost:3001/api";
+// Use VITE_API_BASE environment variable for production (set in .env.production)
+// Falls back to localhost:3001 for local development
+const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
 
 interface LoginResponse {
   token: string;
