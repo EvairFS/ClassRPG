@@ -1,5 +1,6 @@
-@import "tailwindcss";
-@config "../tailwind.config.ts";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -46,7 +47,7 @@
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
 
   body {
@@ -77,38 +78,62 @@
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes beam-reveal {
-  0%   { transform: scaleX(0); opacity: 0; }
-  30%  { transform: scaleX(0.01); opacity: 1; }
+  0% { transform: scaleX(0); opacity: 0; }
+  30% { transform: scaleX(0.01); opacity: 1; }
   100% { transform: scaleX(1); opacity: 1; }
 }
 
 @keyframes etch-in {
-  0%   { opacity: 0; letter-spacing: 0.5em; }
+  0% { opacity: 0; letter-spacing: 0.5em; }
   100% { opacity: 1; letter-spacing: 0.2em; }
 }
 
 @keyframes crack-out {
-  0%   { opacity: 1; transform: scale(1); }
+  0% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(1.2); filter: blur(4px); }
 }
 
 @keyframes xp-pop {
-  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
-  50%  { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  0% { opacity: 0; transform: translateY(0) scale(0.5); }
+  50% { opacity: 1; transform: translateY(-20px) scale(1.2); }
   100% { opacity: 0; transform: translateY(-40px) scale(1); }
 }
 
-.animate-fade-up  { animation: fade-up 0.5s ease-out forwards; }
-.animate-xp-fill  { animation: xp-fill 1s ease-out forwards; }
-.animate-beam     { animation: beam-reveal 0.8s ease-out forwards; }
-.animate-etch     { animation: etch-in 0.6s ease-out 0.8s forwards; opacity: 0; }
-.animate-crack    { animation: crack-out 0.5s ease-in forwards; }
-.animate-xp-pop   { animation: xp-pop 1.5s ease-out forwards; }
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out forwards;
+}
+
+.animate-xp-fill {
+  animation: xp-fill 1s ease-out forwards;
+}
+
+.animate-beam {
+  animation: beam-reveal 0.8s ease-out forwards;
+}
+
+.animate-etch {
+  animation: etch-in 0.6s ease-out 0.8s forwards;
+  opacity: 0;
+}
+
+.animate-crack {
+  animation: crack-out 0.5s ease-in forwards;
+}
+
+.animate-xp-pop {
+  animation: xp-pop 1.5s ease-out forwards;
+}
 
 .stagger-1 { animation-delay: 0.1s; }
 .stagger-2 { animation-delay: 0.2s; }

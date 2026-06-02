@@ -1,4 +1,4 @@
-import type { Activity } from "@/types";
+import { Activity } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 
 interface ActivityCardProps {
@@ -29,15 +29,11 @@ const ActivityCard = ({ activity, onSubmit, showSubmit = false }: ActivityCardPr
           {activity.title}
         </h3>
         <span
-          className={`text-xs font-body px-2 py-1 border ${
-            activity.status === "completed"
+          className={`text-xs font-body px-2 py-1 border ${activity.status === "completed"
               ? "border-border text-muted-foreground"
-              : // eslint-disable-next-line prettier/prettier
-          activity.status === "active" ? "border-accent text-accent" :
-          // eslint-disable-next-line prettier/prettier
-          // eslint-disable-next-line prettier/prettier
-          // eslint-disable-next-line prettier/prettier
-          "border-primary text-primary"
+              : activity.status === "active"
+                ? "border-accent text-accent"
+                : "border-primary text-primary"
           }`}
         >
           {statusLabels[activity.status]}

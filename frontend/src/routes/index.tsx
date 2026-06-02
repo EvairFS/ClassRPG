@@ -45,7 +45,7 @@ function LoginPage() {
         </p>
       }
     >
-      <div className="mx-auto mb-5 flex w-fit justify-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
         {ROLES.map((r) => {
           const Icon = r.icon;
           const active = r.id === role.id;
@@ -55,7 +55,7 @@ function LoginPage() {
               type="button"
               onClick={() => setRole(r)}
               className={
-                "inline-flex w-36 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition " +
+                "inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition " +
                 (active
                   ? "bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
                   : "text-muted-foreground hover:text-foreground")

@@ -18,12 +18,16 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm animate-fade-up">
         <div className="text-center mb-12">
-          <img src="/logo.png" alt="ClassRPG Logo" className="h-21 w-21 object-contain mix-blend-screen mx-auto mb-0" />
-            <h1 className="font-display text-4xl md:text-5xl text-accent tracking-widest mb-3">
-              ClassRPG
-            </h1>
-              <p className="text-muted-foreground font-body text-sm tracking-wide">
-              Sua jornada pelo conhecimento começa aqui
+          <img
+            src="/logo.png"
+            alt="ClassRPG Logo"
+            className="h-21 w-21 object-contain mix-blend-screen mx-auto mb-0"
+          />
+          <h1 className="font-display text-4xl md:text-5xl text-accent tracking-widest mb-3">
+            ClassRPG
+          </h1>
+          <p className="text-muted-foreground font-body text-sm tracking-wide">
+            Sua jornada pelo conhecimento começa aqui
           </p>
         </div>
 
@@ -76,7 +80,11 @@ const LoginPage = () => {
                 className="bg-secondary border-border text-foreground font-body"
               />
             </div>
-            <Button type="submit" className="w-full uppercase tracking-widest font-display text-xs" size="lg">
+            <Button
+              type="submit"
+              className="w-full uppercase tracking-widest font-display text-xs"
+              size="lg"
+            >
               Entrar na Aventura
             </Button>
           </form>

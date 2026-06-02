@@ -1,4 +1,4 @@
-import { getLevelInfo } from "@/lib/gamification";
+import { getLevelInfo } from "@/data/mockData";
 
 interface XPBarProps {
   xp: number;

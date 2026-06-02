@@ -1,51 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import XPBar from "@/components/XPBar";
 import BadgeCard from "@/components/BadgeCard";
 import ActivityCard from "@/components/ActivityCard";
 import RankingTable from "@/components/RankingTable";
 import LevelUpModal from "@/components/LevelUpModal";
-import { api } from "@/api";
-import { CURRENT_STUDENT, MOCK_ACTIVITIES, MOCK_STUDENTS } from "@/data/mockData";
-import { getLevelInfo } from "@/lib/gamification";
+import { CURRENT_STUDENT, MOCK_ACTIVITIES, MOCK_BADGES, MOCK_STUDENTS, getLevelInfo } from "@/data/mockData";
 
 const StudentDashboard = () => {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ amount: number; visible: boolean }>({ amount: 0, visible: false });
-
-  const {
-    data: currentStudent,
-    isLoading: isStudentLoading,
-    isError: isStudentError,
-  } = useQuery(["currentStudent"], api.getCurrentStudent, {
-      retry: false,
-      staleTime: 1000 * 60,
-  });
-
-  const { data: students, isLoading: isStudentsLoading } = useQuery(["students"], api.getStudents, {
-    retry: false,
-    staleTime: 1000 * 60,
-  });
-
-  const { data: activities, isLoading: isActivitiesLoading } = useQuery(
-    ["activities"],
-    api.getActivities,
-    {
-      retry: false,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const me = currentStudent || {
-    id: "",
-    name: "Carregando...",
-    avatar: "?",
-    xp: 0,
-  };
-  const studentList = students || [];
-  const activityList = activities || MOCK_ACTIVITIES;
-  const info = getLevelInfo(me.xp);
+  const info = getLevelInfo(CURRENT_STUDENT.xp);
 
   const handleSubmit = (activityId: string) => {
     const activity = MOCK_ACTIVITIES.find((a) => a.id === activityId);
@@ -77,14 +42,14 @@ const StudentDashboard = () => {
           <div className="border border-border bg-card p-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-14 h-14 border-2 border-accent flex items-center justify-center font-body font-semibold text-lg text-accent">
-                {me.avatar}
+                {CURRENT_STUDENT.avatar}
               </div>
               <div>
-                <h2 className="font-display text-lg text-foreground tracking-wider uppercase">{me.name}</h2>
-                <p className="text-sm text-accent font-display">{me.xp} XP Total</p>
+                <h2 className="font-display text-lg text-foreground tracking-wider uppercase">{CURRENT_STUDENT.name}</h2>
+                <p className="text-sm text-accent font-display">{CURRENT_STUDENT.xp} XP Total</p>
               </div>
             </div>
-            <XPBar xp={me.xp} size="lg" />
+            <XPBar xp={CURRENT_STUDENT.xp} size="lg" />
           </div>
         </section>
 
@@ -106,13 +71,8 @@ const StudentDashboard = () => {
             Atividades
           </h2>
           <div className="space-y-3">
-            {activityList.map((activity) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                showSubmit
-                onSubmit={handleSubmit}
-              />
+            {MOCK_ACTIVITIES.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} showSubmit onSubmit={handleSubmit} />
             ))}
           </div>
         </section>
@@ -122,7 +82,7 @@ const StudentDashboard = () => {
           <h2 className="font-display text-xl text-foreground tracking-widest uppercase mb-6 border-b border-border pb-3">
             Ranking da Classe
           </h2>
-          <RankingTable students={studentList} currentUserId={me.id} compact />
+          <RankingTable students={MOCK_STUDENTS} currentUserId={CURRENT_STUDENT.id} compact />
         </section>
       </main>
 

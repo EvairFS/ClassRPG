@@ -33,12 +33,11 @@ export function AuthLayout({
               <span className="text-gradient-primary">jornada épica</span>.
             </h2>
             <p className="max-w-md text-base text-muted-foreground">
-              Missões, XP, patentes e rankings em tempo real para uma educação mais desenvolvida com
-              qualidade SaaS para escolas modernas.
+              Missões, XP, patentes e rankings em tempo real para uma educação mais engajadora —
+              desenvolvida com qualidade SaaS para escolas modernas.
             </p>
             <div className="flex flex-wrap gap-2">
-              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map(
-                (t) => (
+              {["XP em tempo real", "Missões diárias", "Ranking ao vivo", "Conquistas épicas"].map((t) => (
                   <span
                     key={t}
                     className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-foreground/80"

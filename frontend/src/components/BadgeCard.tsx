@@ -1,4 +1,4 @@
-import type { Achievement as BadgeType } from "@/types";
+import type { Achievement } from "@/types";
 import { Star, Shield, Sword, Crown, Flame, Eye } from "lucide-react";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -11,7 +11,7 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 interface BadgeCardProps {
-  badge: BadgeType;
+  badge: Achievement;
 }
 
 const BadgeCard = ({ badge }: BadgeCardProps) => {

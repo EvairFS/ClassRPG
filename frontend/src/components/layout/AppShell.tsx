@@ -1,6 +1,4 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api";
 import {
   BarChart3,
   Bell,
@@ -17,6 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { CURRENT_STUDENT, MOCK_NOTIFICATIONS } from "@/data/mockData";
 import type { UserRole } from "@/types";
 
 interface AppShellProps {
@@ -28,52 +27,37 @@ interface AppShellProps {
 const NAV: Record<UserRole, { to: string; label: string; icon: React.ElementType }[]> = {
   student: [
     { to: "/student", label: "Painel", icon: LayoutDashboard },
-    { to: "/missions", label: "Missões", icon: Target },
-    { to: "/activities", label: "Atividades", icon: Swords },
-    { to: "/ranking", label: "Ranking", icon: Trophy },
-    { to: "/achievements", label: "Conquistas", icon: Sparkles },
-    { to: "/teams", label: "Equipes", icon: Users },
-    { to: "/notifications", label: "Notificações", icon: Bell },
+    { to: "/student", label: "Missões", icon: Target },
+    { to: "/student", label: "Atividades", icon: Swords },
+    { to: "/student", label: "Ranking", icon: Trophy },
+    { to: "/student", label: "Conquistas", icon: Sparkles },
   ],
   teacher: [
     { to: "/teacher", label: "Painel", icon: LayoutDashboard },
-    { to: "/activities", label: "Atividades", icon: Swords },
-    { to: "/missions", label: "Missões", icon: Target },
-    { to: "/reports", label: "Relatórios", icon: BarChart3 },
-    { to: "/notifications", label: "Notificações", icon: Bell },
+    { to: "/teacher", label: "Turmas", icon: Users },
+    { to: "/teacher", label: "Atividades", icon: Swords },
+    { to: "/teacher", label: "Missões", icon: Target },
+    { to: "/teacher", label: "Relatórios", icon: BarChart3 },
+  ],
+  admin: [
+    { to: "/admin", label: "Visão geral", icon: LayoutDashboard },
+    { to: "/admin", label: "Escolas", icon: GraduationCap },
+    { to: "/admin", label: "Professores", icon: Shield },
+    { to: "/admin", label: "Alunos", icon: Users },
+    { to: "/admin", label: "Métricas", icon: BarChart3 },
   ],
 };
 
 const ROLE_LABEL: Record<UserRole, string> = {
   student: "Aluno",
   teacher: "Professor",
+  admin: "Administrador",
 };
 
 export function AppShell({ role, title, children }: AppShellProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = NAV[role];
-
-  const { data: currentStudent } = useQuery(
-    ["currentStudent"],
-    api.getCurrentStudent,
-    {
-      retry: false,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const { data: notifications = [] } = useQuery(
-    ["notifications"],
-    api.getNotifications,
-    {
-      retry: false,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const unread = notifications.filter((n: any) => !n.read).length;
-  const studentName = currentStudent?.name || "Aluno";
-  const studentAvatar = currentStudent?.avatar || "?";
+  const unread = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
 
   return (
     <div className="flex min-h-screen">
@@ -91,8 +75,8 @@ export function AppShell({ role, title, children }: AppShellProps) {
           </div>
         </div>
         <nav className="flex-1 space-y-0.5 px-3 py-4">
-          {items.map((item) => {
-            const active = path === item.to;
+          {items.map((item, i) => {
+            const active = i === 0 && path === item.to;
             return (
               <Link
                 key={item.label}
@@ -131,11 +115,15 @@ export function AppShell({ role, title, children }: AppShellProps) {
         <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 text-[11px] font-semibold ring-1 ring-white/15">
-              {role === "student" ? studentAvatar : "RV"}
+              {role === "student" ? CURRENT_STUDENT.avatar : role === "teacher" ? "RV" : "AD"}
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-foreground">
-                {role === "student" ? studentName : "Renata V."}
+                {role === "student"
+                  ? CURRENT_STUDENT.name
+                  : role === "teacher"
+                    ? "Renata V."
+                    : "Admin"}
               </p>
               <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
             </div>
@@ -161,17 +149,14 @@ export function AppShell({ role, title, children }: AppShellProps) {
                 ⌘K
               </kbd>
             </div>
-            <Link
-              to="/notifications"
-              className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground"
-            >
+            <button className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground">
               <Bell className="size-4" />
               {unread > 0 && (
                 <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">
                   {unread}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </header>
         <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>

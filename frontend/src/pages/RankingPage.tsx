@@ -1,30 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import RankingTable from "@/components/RankingTable";
-import { api } from "@/api";
+import { MOCK_STUDENTS, CURRENT_STUDENT } from "@/data/mockData";
 
 const RankingPage = () => {
-  const { data: ranking = [] } = useQuery(
-    ["ranking"],
-    api.getRanking,
-    {
-      retry: false,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const { data: currentStudent } = useQuery(
-    ["currentStudent"],
-    api.getCurrentStudent,
-    {
-      retry: false,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const students = ranking.map((item: any) => item.student) || [];
-  const currentUserId = currentStudent?.id || "";
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar userType="student" />
@@ -37,7 +15,7 @@ const RankingPage = () => {
           <p className="text-center text-sm text-muted-foreground font-body mb-10">
             Os maiores guerreiros do conhecimento
           </p>
-          <RankingTable students={students} currentUserId={currentUserId} />
+          <RankingTable students={MOCK_STUDENTS} currentUserId={CURRENT_STUDENT.id} />
         </section>
       </main>
     </div>
