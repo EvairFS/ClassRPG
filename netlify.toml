@@ -1,7 +1,7 @@
 [build]
   base    = "ClassRPG"
   command = "npm run build"
-  publish = "ClassRPG/dist"
+  publish = "dist"
  
 [build.environment]
   NODE_VERSION = "20"
@@ -10,3 +10,4 @@
   from   = "/*"
   to     = "/index.html"
   status = 200
+ 
