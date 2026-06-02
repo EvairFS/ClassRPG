@@ -1,10 +1,11 @@
 [build]
+  base    = "ClassRPG"
   command = "npm run build"
-  publish = "dist"
-
+  publish = "ClassRPG/dist"
+ 
 [build.environment]
   NODE_VERSION = "20"
-
+ 
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
