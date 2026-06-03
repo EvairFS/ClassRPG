@@ -1,68 +1,41 @@
 import pg from "pg";
-import { DB, DATABASE_URL, USE_DB_SSL } from "./config.js";
+import { DATABASE_URL } from "./config.js";
 
-const sslOptions = USE_DB_SSL ? { rejectUnauthorized: false } : false;
+if (!DATABASE_URL) {
+  console.error("❌ Erro grave: DATABASE_URL não foi encontrada no arquivo .env!");
+  process.exit(1);
+}
 
-const poolConfig = DATABASE_URL
-  ? {
-      connectionString: DATABASE_URL,
-      ssl: sslOptions,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    }
-  : {
-      host: DB.host,
-      port: DB.port,
-      user: DB.user,
-      password: DB.password,
-      database: DB.database,
-      ssl: sslOptions,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    };
-
-export const pool = new pg.Pool(poolConfig);
-
-// Test connection on startup
-pool.query("SELECT 1").catch((err) => {
-  console.error("⚠️  Database connection failed:", err.message);
-  console.error("   Make sure PostgreSQL is running and the database exists.");
+const pool = new pg.Pool({
+  connectionString: DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // ◄ Isso desativa a exigência de certificado local e permite conectar na Supabase
+  },
+  max: 10, // Máximo de conexões simultâneas
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000, // 10 segundos de limite para conectar
 });
 
-/**
- * Execute a query and return the rows.
- */
-export function q(text, params) {
-  return pool.query(text, params).then((r) => r.rows);
-}
+// Função qOne que suas rotas (ex: auth.js linha 29) usam para buscar um único registro
+export const qOne = async (text, params) => {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(text, params);
+    return res.rows[0]; // Retorna apenas a primeira linha encontrada
+  } finally {
+    client.release(); // Devolve a conexão para o pooler da Supabase
+  }
+};
 
-/**
- * Execute a query and return a single row, or null.
- */
-export async function qOne(text, params) {
-  const rows = await q(text, params);
-  return rows.length > 0 ? rows[0] : null;
-}
+// Caso alguma rota use uma busca de várias linhas (ex: listar alunos)
+export const qAll = async (text, params) => {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(text, params);
+    return res.rows; // Retorna todas as linhas
+  } finally {
+    client.release();
+  }
+};
 
-/**
- * Execute a query with count (for pagination).
- * Returns { rows, count }.
- */
-export async function qWithCount(text, params, countText, countParams) {
-  const [rows, countResult] = await Promise.all([
-    q(text, params),
-    q(countText || `SELECT COUNT(*) FROM (${text}) AS sub`, countParams || params),
-  ]);
-  return { rows, total: parseInt(countResult[0].count, 10) };
-}
-
-/**
- * Get a client from the pool for transactions.
- */
-export function getClient() {
-  return pool.connect();
-}
-
-// No default export — use named exports: `pool`, `q`, `qOne`, `qWithCount`, `getClient`.
+export default pool;
