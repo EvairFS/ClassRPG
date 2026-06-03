@@ -1,22 +1,59 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatsCard } from "@/components/gamification/StatsCard";
 import { RankingTable } from "@/components/gamification/RankingTable";
 import { EngagementChart } from "@/components/charts/EngagementChart";
 import { ProgressChart } from "@/components/charts/ProgressChart";
 import { MissionCard } from "@/components/gamification/MissionCard";
-import {
-  CLASS_ENGAGEMENT, CURRENT_TEACHER, MOCK_ACTIVITIES, MOCK_MISSIONS, MOCK_STUDENTS, STUDENT_PERF_WEEK,
-} from "@/data/mockData";
+import { CLASS_ENGAGEMENT, STUDENT_PERF_WEEK } from "@/data/mockData";
 import { Award, BookOpen, MessageSquare, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DifficultyBadge } from "@/components/gamification/DifficultyBadge";
+import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { ErrorState, LoadingState } from "@/components/common/QueryState";
 
 export const Route = createFileRoute("/teacher")({ component: TeacherDashboard });
 
 function TeacherDashboard() {
-  const t = CURRENT_TEACHER;
-  const avgXp = Math.round(MOCK_STUDENTS.reduce((s, x) => s + x.xp, 0) / MOCK_STUDENTS.length);
+  const { user, isAuthenticated, hydrated } = useAuth();
+  const { data: dash, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["dashboard", "teacher"],
+    queryFn: api.getTeacherDashboard,
+    enabled: hydrated && isAuthenticated,
+  });
+  const { data: missions } = useQuery({
+    queryKey: ["missions"],
+    queryFn: api.getMissions,
+    enabled: hydrated && isAuthenticated,
+  });
+
+  if (!hydrated || isLoading) {
+    return (
+      <AppShell role="teacher" title="Painel do Professor">
+        <LoadingState label="Carregando painel…" />
+      </AppShell>
+    );
+  }
+  if (isError || !dash) {
+    return (
+      <AppShell role="teacher" title="Painel do Professor">
+        <ErrorState error={error} onRetry={() => refetch()} />
+      </AppShell>
+    );
+  }
+
+  const t =
+    dash.teachers.find((x) => x.id === user?.id) ?? dash.currentTeacher ?? dash.teachers[0];
+  if (!t) {
+    return (
+      <AppShell role="teacher" title="Painel do Professor">
+        <ErrorState label="Nenhum professor cadastrado ainda." />
+      </AppShell>
+    );
+  }
+  const avgXp = dash.stats.averageXp;
   return (
     <AppShell role="teacher" title={`Olá, Profa. ${t.name.split(" ")[0]}`}>
       <div className="space-y-6">
@@ -25,8 +62,12 @@ function TeacherDashboard() {
           <div className="relative flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Painel do Professor</p>
-              <h2 className="mt-1 text-2xl font-bold text-foreground">{t.subject} · Turmas {t.classes.join(" e ")}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{t.studentsCount} alunos · 4 missões ativas · 12 atividades em andamento</p>
+              <h2 className="mt-1 text-2xl font-bold text-foreground">
+                {t.subject} · Turmas {(t.classes ?? []).join(" e ") || "—"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {dash.stats.totalStudents} alunos · {(missions ?? []).filter((m) => m.status !== "expired").length} missões ativas · {dash.stats.totalActivities} atividades
+              </p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="border-white/15 bg-white/5 text-foreground hover:bg-white/10">Nova missão</Button>
@@ -36,10 +77,21 @@ function TeacherDashboard() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatsCard label="Alunos ativos" value={t.studentsCount} delta={8} icon={Users} tint="primary" />
-          <StatsCard label="Entregas" value={142} delta={14} icon={BookOpen} tint="secondary" />
+          <StatsCard label="Alunos ativos" value={dash.stats.totalStudents} delta={8} icon={Users} tint="primary" />
+          <StatsCard
+            label="Entregas"
+            value={dash.activities.filter((a) => a.status !== "pending").length}
+            delta={14}
+            icon={BookOpen}
+            tint="secondary"
+          />
           <StatsCard label="XP médio" value={avgXp.toLocaleString("pt-BR")} delta={6} icon={Award} tint="accent" />
-          <StatsCard label="Feedbacks" value={37} delta={-3} icon={MessageSquare} tint="muted" />
+          <StatsCard
+            label="Avaliadas"
+            value={dash.activities.filter((a) => a.status === "graded").length}
+            icon={MessageSquare}
+            tint="muted"
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -63,22 +115,22 @@ function TeacherDashboard() {
           <section className="xl:col-span-2 space-y-3">
             <h2 className="text-base font-semibold text-foreground">Missões publicadas</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {MOCK_MISSIONS.slice(0, 4).map((m) => <MissionCard key={m.id} mission={m} />)}
+              {(missions ?? []).slice(0, 4).map((m) => <MissionCard key={m.id} mission={m} />)}
             </div>
           </section>
           <aside className="space-y-3">
             <h2 className="text-base font-semibold text-foreground">Top alunos</h2>
-            <RankingTable students={MOCK_STUDENTS} compact />
+            <RankingTable students={[...dash.students].sort((a, b) => b.xp - a.xp)} compact />
           </aside>
         </div>
 
         <section className="glass rounded-2xl p-5">
           <header className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Atividades em avaliação</h2>
-            <span className="text-xs text-muted-foreground">{MOCK_ACTIVITIES.length} itens</span>
+            <span className="text-xs text-muted-foreground">{dash.activities.length} itens</span>
           </header>
           <ul className="divide-y divide-white/5">
-            {MOCK_ACTIVITIES.map((a) => (
+            {dash.activities.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{a.title}</p>

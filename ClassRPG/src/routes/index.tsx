@@ -6,8 +6,10 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Shield, User } from "lucide-react";
+import { GraduationCap, Loader2, Shield, User } from "lucide-react";
 import { useState } from "react";
+import { api, ApiError } from "@/lib/api";
+import { setAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({ component: LoginPage });
 
@@ -18,19 +20,44 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const ROLES = [
-  { id: "student", label: "Aluno", icon: User, to: "/student" },
-  { id: "teacher", label: "Professor", icon: GraduationCap, to: "/teacher" },
+  { id: "student", label: "Aluno", icon: User },
+  { id: "teacher", label: "Professor", icon: GraduationCap },
+  { id: "admin", label: "Admin", icon: Shield },
 ] as const;
 
 function LoginPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState<(typeof ROLES)[number]>(ROLES[0]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const { register, handleSubmit, formState } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "carla@classrpg.io", password: "123456" },
+    defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = () => navigate({ to: role.to });
+  const onSubmit = async (values: FormValues) => {
+    setSubmitError(null);
+    setPending(true);
+    try {
+      const { token, user } = await api.login(values.email, values.password);
+      setAuth({ token, user });
+      const dest =
+        user.role === "teacher"
+          ? "/teacher"
+          : user.role === "admin"
+            ? "/admin"
+            : "/student";
+      navigate({ to: dest });
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : "Não foi possível entrar. Tente novamente.";
+      setSubmitError(msg);
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <AuthLayout
@@ -45,7 +72,7 @@ function LoginPage() {
         </p>
       }
     >
-      <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      <div className="mb-5 grid grid-cols-3 gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
         {ROLES.map((r) => {
           const Icon = r.icon;
           const active = r.id === role.id;
@@ -90,10 +117,23 @@ function LoginPage() {
         </div>
         <Button
           type="submit"
-          className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
+          disabled={pending}
+          className="w-full bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 disabled:opacity-60"
         >
-          Entrar como {role.label}
+          {pending ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" />
+              Entrando…
+            </span>
+          ) : (
+            `Entrar como ${role.label}`
+          )}
         </Button>
+        {submitError && (
+          <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-center text-xs text-rose-300">
+            {submitError}
+          </p>
+        )}
       </form>
     </AuthLayout>
   );

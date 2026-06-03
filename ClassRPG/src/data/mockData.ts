@@ -77,11 +77,26 @@ export const MOCK_MISSIONS: Mission[] = [
 ];
 
 export const MOCK_ACTIVITIES: ActivityItem[] = [
-  { id: "ac1", title: "Quiz: Frações", description: "10 questões de operações com frações.", subject: "Matemática", difficulty: "Easy", xpReward: 80, deadline: "2026-05-22", status: "pending" },
-  { id: "ac2", title: "Redação: Mundo em 2050", description: "Texto dissertativo de 25 linhas.", subject: "Português", difficulty: "Medium", xpReward: 160, deadline: "2026-05-24", status: "pending" },
-  { id: "ac3", title: "Lab virtual: pH", description: "Simulador de soluções ácido-base.", subject: "Química", difficulty: "Hard", xpReward: 240, deadline: "2026-05-26", status: "submitted" },
-  { id: "ac4", title: "Apresentação: Guerra Fria", description: "Slides em grupo (3 alunos).", subject: "História", difficulty: "Epic", xpReward: 420, deadline: "2026-05-30", status: "pending" },
-  { id: "ac5", title: "Listas de exercícios — Funções", description: "Lista 04, capítulo 7.", subject: "Matemática", difficulty: "Medium", xpReward: 140, deadline: "2026-05-19", status: "graded", grade: 92 },
+  { id: "ac1", title: "Quiz: Frações", description: "10 questões de operações com frações.", subject: "Matemática", difficulty: "Easy", xpReward: 80, deadline: "2026-05-22", status: "pending", teacher: "Renata Vasconcelos",
+    instructions: "Resolva as 10 questões abaixo no campo de resposta. Mostre os cálculos quando necessário. Tempo estimado: 25 minutos.",
+    attachments: [{ name: "lista-fracoes.pdf", size: "180 KB" }] },
+  { id: "ac2", title: "Redação: Mundo em 2050", description: "Texto dissertativo de 25 linhas.", subject: "Português", difficulty: "Medium", xpReward: 160, deadline: "2026-05-24", status: "pending", teacher: "Letícia Quintela",
+    instructions: "Produza um texto dissertativo-argumentativo de 25 linhas sobre os desafios da humanidade em 2050." },
+  { id: "ac3", title: "Lab virtual: pH", description: "Simulador de soluções ácido-base.", subject: "Química", difficulty: "Hard", xpReward: 240, deadline: "2026-05-26", status: "submitted", teacher: "Patrícia Nogueira",
+    submission: "Relatório completo enviado com prints do simulador e tabela de resultados.",
+    instructions: "Use o simulador, varie a concentração e registre os valores de pH obtidos." },
+  { id: "ac4", title: "Apresentação: Guerra Fria", description: "Slides em grupo (3 alunos).", subject: "História", difficulty: "Epic", xpReward: 420, deadline: "2026-05-30", status: "pending", teacher: "Marcos Tavares",
+    instructions: "Em grupos de 3, prepare slides cobrindo causas, fases e consequências da Guerra Fria.",
+    attachments: [{ name: "roteiro-apresentacao.docx", size: "92 KB" }] },
+  { id: "ac5", title: "Listas de exercícios — Funções", description: "Lista 04, capítulo 7.", subject: "Matemática", difficulty: "Medium", xpReward: 140, deadline: "2026-05-19", status: "graded", grade: 92, teacher: "Renata Vasconcelos",
+    submission: "Resoluções entregues no prazo, com gráficos desenhados à mão.",
+    feedback: "Excelente domínio de funções afim e quadrática. Reveja função inversa." },
+  { id: "ac6", title: "Mapa mental: Sistema solar", description: "Diagrama interativo das principais luas.", subject: "Ciências", difficulty: "Easy", xpReward: 90, deadline: "2026-05-23", status: "pending", teacher: "Patrícia Nogueira",
+    instructions: "Construa um mapa mental cobrindo os 8 planetas e ao menos 5 luas relevantes." },
+  { id: "ac7", title: "Leitura: Capítulo 'Vidas Secas'", description: "Resumo + análise da personagem Fabiano.", subject: "Literatura", difficulty: "Medium", xpReward: 170, deadline: "2026-05-21", status: "submitted", teacher: "Letícia Quintela",
+    submission: "Resumo entregue com análise comparativa entre Fabiano e Sinhá Vitória." },
+  { id: "ac8", title: "Pesquisa: Energias renováveis", description: "Relatório com 3 fontes citadas.", subject: "Geografia", difficulty: "Hard", xpReward: 260, deadline: "2026-05-28", status: "pending", teacher: "Eduardo Brandão",
+    instructions: "Compare as matrizes energéticas do Brasil e da Alemanha. Cite ao menos 3 fontes acadêmicas." },
 ];
 
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [
@@ -90,13 +105,22 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   { id: "n3", title: "Feedback da Profa. Renata", body: "Ótima resolução no exercício de funções.", type: "feedback", read: false, createdAt: "ontem" },
   { id: "n4", title: "Missão semanal liberada", body: "Resolva 3 desafios de Matemática.", type: "mission", read: true, createdAt: "ontem" },
   { id: "n5", title: "Manutenção programada", body: "Plataforma em manutenção 23/05 02h-03h.", type: "system", read: true, createdAt: "2 dias" },
+  { id: "n6", title: "+80 XP", body: "Você concluiu o Quiz de Frações.", type: "xp", read: true, createdAt: "2 dias" },
+  { id: "n7", title: "Boss bimestral em 11 dias", body: "Prepare-se com a missão épica liberada.", type: "mission", read: false, createdAt: "há 3h" },
+  { id: "n8", title: "Equipe subiu ao 2º lugar", body: "Dragões de Pitágoras avançaram no ranking.", type: "system", read: true, createdAt: "3 dias" },
+  { id: "n9", title: "Feedback do Prof. Marcos", body: "Sua apresentação ficou muito clara, parabéns!", type: "feedback", read: true, createdAt: "4 dias" },
+  { id: "n10", title: "Conquista perto de desbloquear", body: "'Mente Aberta' a 60% — falta XP em 2 matérias.", type: "achievement", read: false, createdAt: "há 30min" },
 ];
 
 export const MOCK_TEAMS: Team[] = [
-  { id: "t1", name: "Dragões de Pitágoras", emblem: "🐉", members: 6, xp: 24200 },
-  { id: "t2", name: "Fênix do Saber", emblem: "🦅", members: 5, xp: 21850 },
-  { id: "t3", name: "Lobos da Síntese", emblem: "🐺", members: 6, xp: 19940 },
-  { id: "t4", name: "Corujas Estrategistas", emblem: "🦉", members: 4, xp: 17220 },
+  { id: "t1", name: "Dragões de Pitágoras", emblem: "🐉", members: 6, xp: 24200, weeklyXp: 3200, motto: "Equações são nossa chama.",
+    memberIds: ["s1", "s3", "s5", "s7", "s9", "s11"] },
+  { id: "t2", name: "Fênix do Saber", emblem: "🦅", members: 5, xp: 21850, weeklyXp: 2810, motto: "Renascemos a cada desafio.",
+    memberIds: ["s2", "s4", "s6", "s8", "s10"] },
+  { id: "t3", name: "Lobos da Síntese", emblem: "🐺", members: 6, xp: 19940, weeklyXp: 2440, motto: "Caçamos respostas em alcateia.",
+    memberIds: ["s12", "s13", "s14", "s15", "s1", "s2"] },
+  { id: "t4", name: "Corujas Estrategistas", emblem: "🦉", members: 4, xp: 17220, weeklyXp: 2090, motto: "Pensamos antes de atacar.",
+    memberIds: ["s4", "s8", "s12", "s14"] },
 ];
 
 /* charts */

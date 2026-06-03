@@ -8,14 +8,27 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root.tsx'
-import { Route as TeacherRouteImport } from './routes/teacher.tsx'
-import { Route as StudentRouteImport } from './routes/student.tsx'
-import { Route as RegisterRouteImport } from './routes/register.tsx'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password.tsx'
-import { Route as AdminRouteImport } from './routes/admin.tsx'
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamsRouteImport } from './routes/teams'
+import { Route as TeacherRouteImport } from './routes/teacher'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MissionsRouteImport } from './routes/missions'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ActivitiesRouteImport } from './routes/activities'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityIdRouteImport } from './routes/activity.$id'
 
+const TeamsRoute = TeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherRoute = TeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
@@ -26,9 +39,29 @@ const StudentRoute = StudentRouteImport.update({
   path: '/student',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissionsRoute = MissionsRouteImport.update({
+  id: '/missions',
+  path: '/missions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -41,75 +74,153 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivitiesRoute = ActivitiesRouteImport.update({
+  id: '/activities',
+  path: '/activities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivityIdRoute = ActivityIdRouteImport.update({
+  id: '/activity/$id',
+  path: '/activity/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/missions': typeof MissionsRoute
+  '/notifications': typeof NotificationsRoute
+  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRoute
+  '/teams': typeof TeamsRoute
+  '/activity/$id': typeof ActivityIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/missions': typeof MissionsRoute
+  '/notifications': typeof NotificationsRoute
+  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRoute
+  '/teams': typeof TeamsRoute
+  '/activity/$id': typeof ActivityIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
+  '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/missions': typeof MissionsRoute
+  '/notifications': typeof NotificationsRoute
+  '/ranking': typeof RankingRoute
   '/register': typeof RegisterRoute
+  '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRoute
+  '/teams': typeof TeamsRoute
+  '/activity/$id': typeof ActivityIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
+    | '/activities'
     | '/admin'
     | '/forgot-password'
+    | '/missions'
+    | '/notifications'
+    | '/ranking'
     | '/register'
+    | '/reports'
     | '/student'
     | '/teacher'
+    | '/teams'
+    | '/activity/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
+    | '/activities'
     | '/admin'
     | '/forgot-password'
+    | '/missions'
+    | '/notifications'
+    | '/ranking'
     | '/register'
+    | '/reports'
     | '/student'
     | '/teacher'
+    | '/teams'
+    | '/activity/$id'
   id:
     | '__root__'
     | '/'
+    | '/achievements'
+    | '/activities'
     | '/admin'
     | '/forgot-password'
+    | '/missions'
+    | '/notifications'
+    | '/ranking'
     | '/register'
+    | '/reports'
     | '/student'
     | '/teacher'
+    | '/teams'
+    | '/activity/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
+  ActivitiesRoute: typeof ActivitiesRoute
   AdminRoute: typeof AdminRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  MissionsRoute: typeof MissionsRoute
+  NotificationsRoute: typeof NotificationsRoute
+  RankingRoute: typeof RankingRoute
   RegisterRoute: typeof RegisterRoute
+  ReportsRoute: typeof ReportsRoute
   StudentRoute: typeof StudentRoute
   TeacherRoute: typeof TeacherRoute
+  TeamsRoute: typeof TeamsRoute
+  ActivityIdRoute: typeof ActivityIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/teams': {
+      id: '/teams'
+      path: '/teams'
+      fullPath: '/teams'
+      preLoaderRoute: typeof TeamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher': {
       id: '/teacher'
       path: '/teacher'
@@ -124,11 +235,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/missions': {
+      id: '/missions'
+      path: '/missions'
+      fullPath: '/missions'
+      preLoaderRoute: typeof MissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -145,6 +284,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activities': {
+      id: '/activities'
+      path: '/activities'
+      fullPath: '/activities'
+      preLoaderRoute: typeof ActivitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -152,16 +305,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activity/$id': {
+      id: '/activity/$id'
+      path: '/activity/$id'
+      fullPath: '/activity/$id'
+      preLoaderRoute: typeof ActivityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
+  ActivitiesRoute: ActivitiesRoute,
   AdminRoute: AdminRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  MissionsRoute: MissionsRoute,
+  NotificationsRoute: NotificationsRoute,
+  RankingRoute: RankingRoute,
   RegisterRoute: RegisterRoute,
+  ReportsRoute: ReportsRoute,
   StudentRoute: StudentRoute,
   TeacherRoute: TeacherRoute,
+  TeamsRoute: TeamsRoute,
+  ActivityIdRoute: ActivityIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

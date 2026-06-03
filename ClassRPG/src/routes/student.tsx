@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProfileHeader } from "@/components/gamification/ProfileHeader";
 import { StatsCard } from "@/components/gamification/StatsCard";
@@ -7,18 +8,44 @@ import { AchievementCard } from "@/components/gamification/AchievementCard";
 import { RankingTable } from "@/components/gamification/RankingTable";
 import { ProgressChart } from "@/components/charts/ProgressChart";
 import { SkillsRadar } from "@/components/charts/SkillsRadar";
-import {
-  CURRENT_STUDENT, MOCK_ACHIEVEMENTS, MOCK_ACTIVITIES, MOCK_MISSIONS, MOCK_STUDENTS,
-  STUDENT_PERF_WEEK, STUDENT_SKILLS_RADAR,
-} from "@/data/mockData";
+import { STUDENT_PERF_WEEK, STUDENT_SKILLS_RADAR } from "@/data/mockData";
 import { DifficultyBadge } from "@/components/gamification/DifficultyBadge";
 import { Bell, Flame, Sparkles, Target, Trophy } from "lucide-react";
+import { api } from "@/lib/api";
+import { ErrorState, LoadingState } from "@/components/common/QueryState";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/student")({ component: StudentDashboard });
 
 function StudentDashboard() {
-  const me = CURRENT_STUDENT;
-  const myRank = [...MOCK_STUDENTS].sort((a, b) => b.xp - a.xp).findIndex((s) => s.id === me.id) + 1;
+  const { user, isAuthenticated, hydrated } = useAuth();
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["dashboard", "student"],
+    queryFn: api.getStudentDashboard,
+    enabled: hydrated && isAuthenticated,
+  });
+
+  if (!hydrated || isLoading) {
+    return (
+      <AppShell role="student" title="Painel do Aventureiro">
+        <LoadingState label="Carregando seu painel…" />
+      </AppShell>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <AppShell role="student" title="Painel do Aventureiro">
+        <ErrorState error={error} onRetry={() => refetch()} />
+      </AppShell>
+    );
+  }
+
+  const me =
+    data.students.find((s) => s.id === user?.id) ?? data.currentStudent ?? data.students[0];
+  const sorted = [...data.students].sort((a, b) => b.xp - a.xp);
+  const myRank = sorted.findIndex((s) => s.id === me.id) + 1;
+  const activeMissions = data.missions.filter((m) => m.status === "in_progress");
+
   return (
     <AppShell role="student" title="Painel do Aventureiro">
       <div className="space-y-6">
@@ -26,9 +53,9 @@ function StudentDashboard() {
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatsCard label="XP total" value={me.xp.toLocaleString("pt-BR")} delta={12} icon={Trophy} tint="accent" />
-          <StatsCard label="Posição" value={`#${myRank}`} delta={2} icon={Sparkles} tint="primary" />
+          <StatsCard label="Posição" value={`#${myRank || "-"}`} delta={2} icon={Sparkles} tint="primary" />
           <StatsCard label="Sequência" value={`${me.streak}d`} delta={5} icon={Flame} tint="secondary" />
-          <StatsCard label="Missões ativas" value={MOCK_MISSIONS.filter(m => m.status === "in_progress").length} icon={Target} tint="muted" />
+          <StatsCard label="Missões ativas" value={activeMissions.length} icon={Target} tint="muted" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -55,7 +82,7 @@ function StudentDashboard() {
               <a className="text-xs text-secondary hover:underline" href="#">Ver todas</a>
             </header>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {MOCK_MISSIONS.slice(0, 4).map((m, i) => (
+              {data.missions.slice(0, 4).map((m, i) => (
                 <div key={m.id} className={`animate-fade-up stagger-${i + 1}`}>
                   <MissionCard mission={m} />
                 </div>
@@ -64,7 +91,7 @@ function StudentDashboard() {
           </section>
           <aside className="space-y-3">
             <h2 className="text-base font-semibold text-foreground">Top da turma</h2>
-            <RankingTable students={MOCK_STUDENTS} currentUserId={me.id} compact />
+            <RankingTable students={sorted} currentUserId={me.id} compact />
           </aside>
         </div>
 
@@ -72,10 +99,10 @@ function StudentDashboard() {
           <section className="lg:col-span-2 glass rounded-2xl p-5">
             <header className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-foreground">Atividades pendentes</h2>
-              <span className="text-xs text-muted-foreground">{MOCK_ACTIVITIES.length} totais</span>
+              <span className="text-xs text-muted-foreground">{data.activities.length} totais</span>
             </header>
             <ul className="divide-y divide-white/5">
-              {MOCK_ACTIVITIES.map((a) => (
+              {data.activities.map((a) => (
                 <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
@@ -102,7 +129,7 @@ function StudentDashboard() {
               <Bell className="size-4 text-muted-foreground" />
             </header>
             <div className="grid grid-cols-2 gap-3">
-              {MOCK_ACHIEVEMENTS.slice(0, 4).map((a) => (
+              {data.achievements.slice(0, 4).map((a) => (
                 <AchievementCard key={a.id} a={a} />
               ))}
             </div>

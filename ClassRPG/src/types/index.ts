@@ -70,6 +70,11 @@ export interface ActivityItem {
   deadline: string;
   status: "pending" | "submitted" | "graded";
   grade?: number;
+  instructions?: string;
+  attachments?: { name: string; size: string }[];
+  feedback?: string;
+  submission?: string;
+  teacher?: string;
 }
 
 export interface NotificationItem {
@@ -87,6 +92,9 @@ export interface Team {
   emblem: string;
   members: number;
   xp: number;
+  weeklyXp?: number;
+  memberIds?: string[];
+  motto?: string;
 }
 
 export interface RankingEntry {
