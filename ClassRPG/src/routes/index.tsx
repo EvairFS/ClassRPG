@@ -6,11 +6,11 @@ import { AuthLayout } from "@/components/layout/AuthLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Loader2, Shield, User } from "lucide-react";
-import { useState, useEffect } from "react"; // 💡 Importado useEffect
+import { GraduationCap, Loader2, User } from "lucide-react"; // 💡 Removido o ícone Shield que não é mais usado
+import { useState, useEffect } from "react"; 
 import { api, ApiError } from "@/lib/api";
 import { setAuth } from "@/lib/auth";
-import { useAuth } from "@/hooks/useAuth"; // 💡 Importado o hook de autenticação
+import { useAuth } from "@/hooks/useAuth"; 
 
 export const Route = createFileRoute("/")({ component: LoginPage });
 
@@ -20,15 +20,15 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+// 💡 Removido o Admin daqui
 const ROLES = [
   { id: "student", label: "Aluno", icon: User },
   { id: "teacher", label: "Professor", icon: GraduationCap },
-  { id: "admin", label: "Admin", icon: Shield },
 ] as const;
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, hydrated, user } = useAuth(); // 💡 Resgata o estado global de autenticação
+  const { isAuthenticated, hydrated, user } = useAuth(); 
   const [role, setRole] = useState<(typeof ROLES)[number]>(ROLES[0]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -38,7 +38,6 @@ function LoginPage() {
     defaultValues: { email: "", password: "" },
   });
 
-  // 💡 REDIRECIONAMENTO AUTOMÁTICO: Se já estiver logado, barra a tela de login e joga pro painel
   useEffect(() => {
     if (hydrated && isAuthenticated && user) {
       const dest =
@@ -75,7 +74,6 @@ function LoginPage() {
     }
   };
 
-  // Se o app já carregou e o usuário está logado, evita dar um "flash" visual do formulário antes de redirecionar
   if (hydrated && isAuthenticated) {
     return null; 
   }
@@ -93,7 +91,8 @@ function LoginPage() {
         </p>
       }
     >
-      <div className="mb-5 grid grid-cols-3 gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      {/* 💡 Alterado de grid-cols-3 para grid-cols-2 */}
+      <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
         {ROLES.map((r) => {
           const Icon = r.icon;
           const active = r.id === role.id;

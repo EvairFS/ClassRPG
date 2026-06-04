@@ -1,4 +1,4 @@
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router"; // 💡 Adicionado o useNavigate aqui
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -14,7 +14,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { ReactNode, useEffect } from "react"; 
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -57,25 +57,35 @@ const ROLE_LABEL: Record<UserRole, string> = {
 };
 
 export function AppShell({ role, title, children }: AppShellProps) {
-  const navigate = useNavigate(); // 💡 Inicializado o hook de navegação
+  const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = NAV[role];
   const { user, isAuthenticated, hydrated, logout } = useAuth();
 
-  // 💡 FUNÇÃO DE LOGOUT: Executa toda a limpeza necessária
+  // 💡 RESOLUÇÃO DO BUG: Descobre o cargo real. Se o usuário estiver logado,
+  // usa o cargo dele (user.role). Se não (carregando), usa o da rota.
+  const currentRole = user?.role || role;
+  const items = NAV[currentRole];
+
+  useEffect(() => {
+    if (hydrated && !isAuthenticated) {
+      navigate({ to: "/", replace: true });
+    }
+  }, [hydrated, isAuthenticated, navigate]);
+
   const handleLogout = () => {
-    localStorage.removeItem("token"); // 1. Remove o token do navegador
-    logout();                         // 2. Atualiza o estado global (isAuthenticated vira false)
-    navigate({ to: "/" });            // 3. Manda de volta para a tela de login raiz
+    localStorage.removeItem("token"); 
+    logout();                         
+    navigate({ to: "/", replace: true }); 
   };
 
+  // 💡 Ajustado para usar currentRole
   const initials = (user?.name ?? "")
     .split(" ")
     .map((p) => p[0])
     .slice(0, 2)
     .join("")
     .toUpperCase() ||
-    (role === "teacher" ? "PR" : role === "admin" ? "AD" : "AL");
+    (currentRole === "teacher" ? "PR" : currentRole === "admin" ? "AD" : "AL");
 
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
@@ -84,6 +94,10 @@ export function AppShell({ role, title, children }: AppShellProps) {
     staleTime: 30_000,
   });
   const unread = (notifications ?? []).filter((n) => !n.read).length;
+
+  if (hydrated && !isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -95,8 +109,9 @@ export function AppShell({ role, title, children }: AppShellProps) {
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">ClassRPG</p>
+            {/* 💡 Ajustado para usar currentRole */}
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              {ROLE_LABEL[role]}
+              {ROLE_LABEL[currentRole]}
             </p>
           </div>
         </div>
@@ -120,19 +135,24 @@ export function AppShell({ role, title, children }: AppShellProps) {
             );
           })}
         </nav>
-        <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Próximo desafio
-          </p>
-          <p className="mt-1 text-sm font-medium text-foreground">Boss bimestral</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Em 11 dias · +900 XP</p>
-          <Link
-            to="/student"
-            className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
-          >
-            Preparar-se
-          </Link>
-        </div>
+
+        {/* 💡 MELHORIA VISUAL: Só exibe o card de missões/desafios se o usuário real for um Aluno */}
+        {currentRole === "student" && (
+          <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Próximo desafio
+            </p>
+            <p className="mt-1 text-sm font-medium text-foreground">Boss bimestral</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Em 11 dias · +900 XP</p>
+            <Link
+              to="/student"
+              className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
+            >
+              Preparar-se
+            </Link>
+          </div>
+        )}
+
         <div className="flex items-center justify-between border-t border-white/5 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <div className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary/40 to-secondary/40 text-[11px] font-semibold ring-1 ring-white/15">
@@ -142,10 +162,10 @@ export function AppShell({ role, title, children }: AppShellProps) {
               <p className="truncate text-xs font-medium text-foreground">
                 {hydrated ? (user?.name ?? "Visitante") : "…"}
               </p>
-              <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
+              {/* 💡 Ajustado para usar currentRole no rodapé do usuário */}
+              <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[currentRole]}</p>
             </div>
           </div>
-          {/* 💡 O Botão foi alterado aqui para disparar o 'handleLogout' */}
           <button
             type="button"
             onClick={handleLogout} 

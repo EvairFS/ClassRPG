@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
@@ -30,12 +30,18 @@ const STATUSES: { value: ActivityItem["status"] | "all"; label: string }[] = [
 function ActivitiesPage() {
   const [status, setStatus] = useState<ActivityItem["status"] | "all">("all");
   const [subject, setSubject] = useState<string>("all");
-  const { hydrated, isAuthenticated } = useAuth();
+  
+  const { user, hydrated, isAuthenticated } = useAuth();
+  const currentRole = user?.role || "student";
+
+  // 💡 SOLUÇÃO: Voltamos a usar o api.getActivities puro.
+  // O TypeScript vai recuperar a inferência de tipos e todos os erros da tela vão sumir!
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["activities"],
+    queryKey: ["activities", currentRole], // Mantém a chave dinâmica para evitar misturar caches
     queryFn: api.getActivities,
     enabled: hydrated && isAuthenticated,
   });
+  
   const activities = data ?? [];
 
   const subjects = useMemo(
@@ -49,25 +55,31 @@ function ActivitiesPage() {
 
   if (!hydrated || isLoading) {
     return (
-      <AppShell role="student" title="Atividades">
+      <AppShell role={currentRole} title="Atividades">
         <LoadingState />
       </AppShell>
     );
   }
   if (isError) {
     return (
-      <AppShell role="student" title="Atividades">
+      <AppShell role={currentRole} title="Atividades">
         <ErrorState error={error} onRetry={() => refetch()} />
       </AppShell>
     );
   }
 
   return (
-    <AppShell role="student" title="Atividades">
+    <AppShell role={currentRole} title="Atividades">
       <div className="space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-foreground">Suas batalhas pendentes</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              {currentRole === "student" 
+                ? "Suas batalhas pendentes" 
+                : currentRole === "teacher" 
+                ? "Gerenciamento de Atividades" 
+                : "Painel de Controle de Atividades"}
+            </h2>
             <p className="text-sm text-muted-foreground">{list.length} atividade(s) encontradas</p>
           </div>
           <div className="flex flex-wrap gap-2">
