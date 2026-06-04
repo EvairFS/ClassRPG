@@ -3,7 +3,7 @@ import { PAGINATION } from "../config.js";
 /**
  * Parse and validate pagination parameters from a request.
  */
-export function parsePagination(query) {
+export function parsePagination(query: { page: string; limit: string; }) {
   let page = parseInt(query.page, 10);
   let limit = parseInt(query.limit, 10);
 
@@ -19,7 +19,7 @@ export function parsePagination(query) {
 /**
  * Build pagination meta from query result count.
  */
-export function paginationMeta(page, limit, total) {
+export function paginationMeta(page: any, limit: number, total: number) {
   return {
     page,
     limit,

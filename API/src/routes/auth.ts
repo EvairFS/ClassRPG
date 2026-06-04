@@ -1,7 +1,7 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
-import crypto from "crypto"; // 👈 IMPORTADO: Para gerar UUIDs válidos
+import crypto from "crypto"; 
 import { AUTH_RATE_LIMIT } from "../config.js";
 import { q, qOne } from "../db.js";
 import { generateToken } from "../middleware/auth.js";
@@ -9,9 +9,14 @@ import { validate, loginSchema, registerSchema, forgotPasswordSchema } from "../
 import { success, created } from "../utils/response.js";
 import { UnauthorizedError, ConflictError } from "../utils/errors.js";
 
+// 🛡️ Interface estendida para suportar a propriedade 'user' injetada pelo JWT
+interface CustomRequest extends Request {
+  user?: any;
+}
+
 const router = Router();
 
-// Rate limiter for auth endpoints
+// Rate limiter para os endpoints de autenticação
 const authLimiter = rateLimit({
   windowMs: AUTH_RATE_LIMIT.windowMs,
   max: AUTH_RATE_LIMIT.max,
@@ -23,7 +28,7 @@ const authLimiter = rateLimit({
 router.use(authLimiter);
 
 // ── POST /api/login ──
-router.post("/login", validate(loginSchema), async (req, res, next) => {
+router.post("/login", validate(loginSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
@@ -32,7 +37,7 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
       throw new UnauthorizedError("Credenciais inválidas.");
     }
 
-    // Compare password with bcrypt
+    // Compara a senha com o hash do bcrypt
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       throw new UnauthorizedError("Credenciais inválidas.");
@@ -50,20 +55,20 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
 });
 
 // ── POST /api/register ──
-router.post("/register", validate(registerSchema), async (req, res, next) => {
+router.post("/register", validate(registerSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password, role, classroom, subject } = req.body;
 
-    // Check if email already exists
+    // Verifica se o e-mail já existe
     const existing = await qOne("SELECT id FROM users WHERE email = $1", [email]);
     if (existing) {
       throw new ConflictError("E-mail já cadastrado.");
     }
 
-    // Hash the password
+    // Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 🛡️ CORREÇÃO: Gerando um UUID real compatível com o PostgreSQL/Supabase
+    // Gerando um UUID real compatível com o PostgreSQL/Supabase
     const userId = crypto.randomUUID();
 
     await q(
@@ -72,26 +77,27 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
     );
 
     if (role === "student") {
+      // 🛠️ BUG CORRIGIDO: alterado de string[] para string, já que 'part' é uma palavra do nome
       const initials = name
         .split(" ")
-        .map((part) => part[0]?.toUpperCase())
+        .map((part: string) => part[0]?.toUpperCase())
         .join("")
         .slice(0, 2);
+        
       await q(
         "INSERT INTO students (id, name, avatar, email, classroom, xp, level, patent, streak, missions_completed, activities_completed) VALUES ($1,$2,$3,$4,$5,0,1,'Novato',0,0,0)",
         [userId, name, initials || "ST", email, classroom || "9º Ano"]
       );
     } else if (role === "teacher") {
-          // 🔌 CORREÇÃO: Removido 'name' e 'email' que não existem na tabela teachers do banco
-          await q(
-            "INSERT INTO teachers (id, avatar, subject, classes, students_count, status) VALUES ($1,$2,$3,$4,0,'active')",
-            [
-              userId, 
-              name.slice(0, 2).toUpperCase() || "TE", 
-              subject || "Geral", 
-              classroom ? `{${classroom}}` : "{}"
-            ]
-          );
+      await q(
+        "INSERT INTO teachers (id, avatar, subject, classes, students_count, status) VALUES ($1,$2,$3,$4,0,'active')",
+        [
+          userId, 
+          name.slice(0, 2).toUpperCase() || "TE", 
+          subject || "Geral", 
+          classroom ? `{${classroom}}` : "{}"
+        ]
+      );
     }
 
     const token = generateToken({ id: userId, email, role, name });
@@ -106,7 +112,7 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
 });
 
 // ── POST /api/forgot-password ──
-router.post("/forgot-password", validate(forgotPasswordSchema), async (req, res, next) => {
+router.post("/forgot-password", validate(forgotPasswordSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email } = req.body;
     await qOne("SELECT id FROM users WHERE email = $1", [email]);
@@ -117,7 +123,7 @@ router.post("/forgot-password", validate(forgotPasswordSchema), async (req, res,
 });
 
 // ── GET /api/user/me ──
-router.get("/user/me", async (req, res, next) => {
+router.get("/user/me", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.headers["x-user-id"] || req.user?.id;
     if (!userId) {

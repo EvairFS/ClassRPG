@@ -1,16 +1,21 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { q, qOne } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate, createActivitySchema, submitActivitySchema } from "../middleware/validate.js";
 import { success, created } from "../utils/response.js";
 import { NotFoundError } from "../utils/errors.js";
 
+// 🛡️ Interface estendida para ler as propriedades injetadas pelo middleware de autenticação
+interface CustomRequest extends Request {
+  user?: any;
+}
+
 const router = Router();
 
 router.use(requireAuth);
 
 // ── GET /api/activities ──
-router.get("/", async (_req, res, next) => {
+router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const rows = await q("SELECT * FROM activities ORDER BY deadline ASC");
     success(res, rows);
@@ -20,7 +25,7 @@ router.get("/", async (_req, res, next) => {
 });
 
 // ── GET /api/activities/:id ──
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const activity = await qOne("SELECT * FROM activities WHERE id = $1", [req.params.id]);
     if (!activity) throw new NotFoundError("Atividade");
@@ -31,7 +36,7 @@ router.get("/:id", async (req, res, next) => {
 });
 
 // ── POST /api/activities ──
-router.post("/", validate(createActivitySchema), async (req, res, next) => {
+router.post("/", validate(createActivitySchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description, subject, difficulty, xpReward, deadline, instructions, teacher } = req.body;
     const newId = `ac${Date.now()}`;
@@ -47,12 +52,14 @@ router.post("/", validate(createActivitySchema), async (req, res, next) => {
 });
 
 // ── POST /api/activities/:id/submit ──
-router.post("/:id/submit", validate(submitActivitySchema), async (req, res, next) => {
+router.post("/:id/submit", validate(submitActivitySchema), async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const activity = await qOne("SELECT * FROM activities WHERE id = $1", [req.params.id]);
     if (!activity) throw new NotFoundError("Atividade");
 
     const { submission, studentId: bodyStudentId } = req.body;
+    
+    // 🌟 Graças ao CustomRequest, o TypeScript agora autocompleta e aceita o req.user sem erros
     const studentId = bodyStudentId || req.headers["x-user-id"] || req.user?.id || "s3";
 
     const studentExists = await qOne("SELECT id FROM students WHERE id = $1", [studentId]);

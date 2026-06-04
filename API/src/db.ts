@@ -1,43 +1,44 @@
 import { Pool } from "pg";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg"; // @ts-ignore
 
-// Inicializa o cliente do Prisma
-export const prisma = new PrismaClient();
-
-// Configuração do Pool do pg (raw queries) usando as variáveis de ambiente
+// ── Prisma com adapter pg (Prisma 7) ──
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+const adapter = new PrismaPg(pool);
+export const prisma = new PrismaClient({ adapter });
+
+// ── Helper shortcuts para queries raw ──
+export const q = async (text: string, params?: any[]) => {
+  const res = await pool.query(text, params);
+  return res.rows;
+};
+
+export const qOne = async (text: string, params?: any[]) => {
+  const res = await pool.query(text, params);
+  return res.rows[0] || null;
+};
+
 export const db = {
-  /**
-   * Executa uma query simples no banco de dados (Tipado para remover erro 7006)
-   */
   async query(text: string, params?: any[]) {
     const start = Date.now();
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
-    
-    // Log opcional para debug em desenvolvimento
+
     if (process.env.NODE_ENV !== "production") {
       console.log("executed query", { text, duration, rows: res.rowCount });
     }
-    
+
     return res;
   },
 
-  /**
-   * Retorna um único cliente do pool se precisar gerenciar transações manuais
-   */
   async getClient() {
     const client = await pool.connect();
-    const query = client.query.bind(client);
-    const release = client.release.bind(client);
-    
     return {
-      // Tipando também o client interno caso use em outro lugar
-      query: (text: string, params?: any[]) => query(text, params),
-      release
+      query: (text: string, params?: any[]) => client.query(text, params),
+      release: client.release.bind(client),
     };
-  }
+  },
 };
