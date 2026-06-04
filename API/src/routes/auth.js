@@ -82,10 +82,16 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
         [userId, name, initials || "ST", email, classroom || "9º Ano"]
       );
     } else if (role === "teacher") {
-      await q(
-        "INSERT INTO teachers (id, name, avatar, email, subject, classes, students_count, status) VALUES ($1,$2,$3,$4,$5,$6,0,'active')",
-        [userId, name, name.slice(0, 2).toUpperCase() || "TE", email, subject || "Geral", classroom ? `{${classroom}}` : "{}"]
-      );
+          // 🔌 CORREÇÃO: Removido 'name' e 'email' que não existem na tabela teachers do banco
+          await q(
+            "INSERT INTO teachers (id, avatar, subject, classes, students_count, status) VALUES ($1,$2,$3,$4,0,'active')",
+            [
+              userId, 
+              name.slice(0, 2).toUpperCase() || "TE", 
+              subject || "Geral", 
+              classroom ? `{${classroom}}` : "{}"
+            ]
+          );
     }
 
     const token = generateToken({ id: userId, email, role, name });
@@ -103,7 +109,6 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
 router.post("/forgot-password", validate(forgotPasswordSchema), async (req, res, next) => {
   try {
     const { email } = req.body;
-    // Always return the same message regardless of whether the email exists (security)
     await qOne("SELECT id FROM users WHERE email = $1", [email]);
     success(res, { message: "Se o endereço existir, enviamos instruções para redefinir a senha." });
   } catch (err) {
