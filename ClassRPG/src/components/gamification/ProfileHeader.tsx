@@ -43,8 +43,8 @@ export function ProfileHeader({ student }: { student: Student }) {
         </div>
         <div className="grid grid-cols-3 gap-3 md:gap-4">
           <Mini
-            label="XP total"
-            value={xpTotal.toLocaleString("pt-BR")}
+          label="XP total"
+            value={xpTotal}
             icon={Trophy}
             tint="text-accent"
           />

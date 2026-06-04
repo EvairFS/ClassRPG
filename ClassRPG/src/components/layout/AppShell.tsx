@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router"; // 💡 Adicionado o useNavigate aqui
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -57,9 +57,17 @@ const ROLE_LABEL: Record<UserRole, string> = {
 };
 
 export function AppShell({ role, title, children }: AppShellProps) {
+  const navigate = useNavigate(); // 💡 Inicializado o hook de navegação
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = NAV[role];
   const { user, isAuthenticated, hydrated, logout } = useAuth();
+
+  // 💡 FUNÇÃO DE LOGOUT: Executa toda a limpeza necessária
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // 1. Remove o token do navegador
+    logout();                         // 2. Atualiza o estado global (isAuthenticated vira false)
+    navigate({ to: "/" });            // 3. Manda de volta para a tela de login raiz
+  };
 
   const initials = (user?.name ?? "")
     .split(" ")
@@ -137,9 +145,10 @@ export function AppShell({ role, title, children }: AppShellProps) {
               <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[role]}</p>
             </div>
           </div>
+          {/* 💡 O Botão foi alterado aqui para disparar o 'handleLogout' */}
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout} 
             title="Sair"
             className="text-muted-foreground transition hover:text-foreground"
           >

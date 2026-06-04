@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Loader2, Shield, User } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 💡 Importado useEffect
 import { api, ApiError } from "@/lib/api";
 import { setAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth"; // 💡 Importado o hook de autenticação
 
 export const Route = createFileRoute("/")({ component: LoginPage });
 
@@ -27,13 +28,28 @@ const ROLES = [
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, hydrated, user } = useAuth(); // 💡 Resgata o estado global de autenticação
   const [role, setRole] = useState<(typeof ROLES)[number]>(ROLES[0]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  
   const { register, handleSubmit, formState } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
   });
+
+  // 💡 REDIRECIONAMENTO AUTOMÁTICO: Se já estiver logado, barra a tela de login e joga pro painel
+  useEffect(() => {
+    if (hydrated && isAuthenticated && user) {
+      const dest =
+        user.role === "teacher"
+          ? "/teacher"
+          : user.role === "admin"
+            ? "/admin"
+            : "/student";
+      navigate({ to: dest });
+    }
+  }, [isAuthenticated, hydrated, user, navigate]);
 
   const onSubmit = async (values: FormValues) => {
     setSubmitError(null);
@@ -58,6 +74,11 @@ function LoginPage() {
       setPending(false);
     }
   };
+
+  // Se o app já carregou e o usuário está logado, evita dar um "flash" visual do formulário antes de redirecionar
+  if (hydrated && isAuthenticated) {
+    return null; 
+  }
 
   return (
     <AuthLayout

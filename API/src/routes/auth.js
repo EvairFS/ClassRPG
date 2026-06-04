@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
+import crypto from "crypto"; // 👈 IMPORTADO: Para gerar UUIDs válidos
 import { AUTH_RATE_LIMIT } from "../config.js";
 import { q, qOne } from "../db.js";
 import { generateToken } from "../middleware/auth.js";
@@ -62,7 +63,8 @@ router.post("/register", validate(registerSchema), async (req, res, next) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userId = `${role === "teacher" ? "t" : "s"}${Date.now()}`;
+    // 🛡️ CORREÇÃO: Gerando um UUID real compatível com o PostgreSQL/Supabase
+    const userId = crypto.randomUUID();
 
     await q(
       "INSERT INTO users (id, email, password, role, name) VALUES ($1,$2,$3,$4,$5)",

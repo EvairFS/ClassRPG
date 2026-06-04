@@ -44,8 +44,9 @@ function TeacherDashboard() {
     );
   }
 
-  const t =
+const t =
     dash.teachers.find((x) => x.id === user?.id) ?? dash.currentTeacher ?? dash.teachers[0];
+  
   if (!t) {
     return (
       <AppShell role="teacher" title="Painel do Professor">
@@ -53,9 +54,17 @@ function TeacherDashboard() {
       </AppShell>
     );
   }
+
+  // 💡 SOLUÇÃO: Prioriza o nome do user (douseAuth), depois tenta t.name, e usa "Docente" como último recurso
+  const obterNomeProfessor = () => {
+    const nomeCompleto = user?.name || t?.name || "Docente";
+    return nomeCompleto.split(" ")[0];
+  };
+
   const avgXp = dash.stats.averageXp;
+
   return (
-    <AppShell role="teacher" title={`Olá, Profa. ${t.name.split(" ")[0]}`}>
+    <AppShell role="teacher" title={`Olá, Profa. ${obterNomeProfessor()}`}>
       <div className="space-y-6">
         <div className="glass-strong relative overflow-hidden rounded-3xl p-6 md:p-8 animate-fade-up">
           <div className="pointer-events-none absolute -top-20 right-0 size-72 rounded-full bg-secondary/25 blur-3xl" />
