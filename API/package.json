@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
+    "dev": "node --watch server.js ts-node-dev --respawn --transpile-only src/index.ts",
     "db:setup": "node -e \"import { readFileSync } from 'fs'; const { DATABASE_URL, DB, USE_DB_SSL } = await import('./src/config.js'); const pg = await import('pg'); const pool = new pg.Pool(DATABASE_URL ? { connectionString: DATABASE_URL, ssl: USE_DB_SSL ? { rejectUnauthorized: false } : false } : DB); const schema = readFileSync('./schema.sql', 'utf8'); const seed = readFileSync('./seed.sql', 'utf8'); await pool.query(schema); await pool.query(seed); await pool.end(); console.log('✅ Database setup complete'); process.exit(0);\"",
     "test-db": "node test-db.js",
     "test-db.js": "node test-db.js",
     "db:schema": "psql -f schema.sql",
-    "db:seed": "psql -f seed.sql"
+    "db:seed": "psql -f seed.sql",
+    "build": "tsc"
   },
   "keywords": [
     "classrpg",
@@ -20,6 +21,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^7.8.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -33,8 +35,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/morgan": "^1.9.9"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^25.9.1",
+    "@types/pg": "^8.20.0"
   }
 }

@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "ClassRPG Gamified Education Platform",
   "private": true,
+  
   "scripts": {
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "install:frontend": "cd frontend && npm install",

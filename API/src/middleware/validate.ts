@@ -1,17 +1,24 @@
 import { z } from "zod";
 import { ValidationError } from "../utils/errors.js";
+import { Request, Response, NextFunction } from "express";
 
 /**
  * Middleware factory that validates request body against a Zod schema.
- * @param {z.ZodSchema} schema - The Zod schema to validate against
- * @param {'body' | 'query' | 'params'} source - Which part of the request to validate
+ * @param schema - The Zod schema to validate against
+ * @param source - Which part of the request to validate ('body' | 'query' | 'params')
  */
-export function validate(schema, source = "body") {
-  return (req, _res, next) => {
+export function validate(
+  schema: z.ZodSchema, 
+  source: "body" | "query" | "params" = "body"
+) {
+  return (req: Request, _res: Response, next: NextFunction) => {
     try {
       const parsed = schema.parse(req[source]);
-      // Replace with parsed (coerced/transformed) values
-      req[source] = parsed;
+      
+      // Substitui os valores brutos pelos valores validados/transformados pelo Zod
+      // Usamos 'as any' para mitigar o conflito estrito de indexação do Express
+      req[source] = parsed as any;
+      
       next();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -26,6 +33,7 @@ export function validate(schema, source = "body") {
 }
 
 // ── Common validation schemas ──
+// Os schemas do Zod não precisam de tipagem manual, o TypeScript infere eles perfeitamente!
 
 export const loginSchema = z.object({
   email: z.string().email("E-mail inválido."),

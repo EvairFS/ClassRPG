@@ -3,7 +3,10 @@
  */
 
 export class AppError extends Error {
-  constructor(message, status = 500, code = "INTERNAL_ERROR") {
+  isOperational: boolean;
+  code: string;
+  status: number;
+  constructor(message: string | undefined, status = 500, code = "INTERNAL_ERROR") {
     super(message);
     this.name = "AppError";
     this.status = status;

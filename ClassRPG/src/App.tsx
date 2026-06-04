@@ -1,34 +1,50 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import LoginPage from "./pages/LoginPage";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import RankingPage from "./pages/RankingPage";
-import ActivityPage from "./pages/ActivityPage";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Importa a árvore de rotas gerada pelo TanStack Router
+import { routeTree } from "./routeTree.gen";
+
+// 🛡️ Configuração do QueryClient protegida contra loops e HTTP 429
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 30, // Considera os dados frescos por 30s
+      refetchOnWindowFocus: false, // Evita requests ao clicar na janela
+      refetchOnReconnect: false, // Evita disparos se a rede oscilar
+      retry: (failureCount, error: any) => {
+        const status = error?.response?.status;
+        if (status === 429 || status === 401) return false;
+        return failureCount < 2;
+      },
+    },
+  },
+});
+
+// 💡 SOLUÇÃO: injetamos o queryClient no bloco 'context' exigido pelo router
+const router = createRouter({
+  routeTree,
+  context: {
+    queryClient,
+  },
+});
+
+// Registra o router no TypeScript para tipagem estática dos links
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/student" element={<StudentDashboard />} />
-          <Route path="/teacher" element={<TeacherDashboard />} />
-          <Route path="/ranking" element={<RankingPage />} />
-          <Route path="/activity/:id" element={<ActivityPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </TooltipProvider>
   </QueryClientProvider>
 );
-
 export default App;
