@@ -5,9 +5,12 @@ import "dotenv/config";
 
 const connectionString = process.env.DATABASE_URL!;
 
+// 🌟 ALTERADO: Removemos os parâmetros da URL (como ?sslmode=...) que quebram o rejectUnauthorized
+const cleanConnectionString = connectionString.split("?")[0];
+
 const pool = new Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
+  connectionString: cleanConnectionString, // 🌟 Usando a URL limpa aqui
+  ssl: { rejectUnauthorized: false },     // Agora esta linha será respeitada de verdade!
   max: 10,
 });
 
