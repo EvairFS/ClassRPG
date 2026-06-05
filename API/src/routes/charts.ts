@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { success } from "../utils/response.js";
 
@@ -7,7 +7,7 @@ const router = Router();
 router.use(requireAuth);
 
 // ── GET /api/charts/student-perf-week ──
-router.get("/student-perf-week", (_req, res) => {
+router.get("/student-perf-week", (_req: Request, res: Response) => {
   success(res, [
     { day: "Seg", xp: 120, missions: 1 },
     { day: "Ter", xp: 240, missions: 2 },
@@ -20,7 +20,7 @@ router.get("/student-perf-week", (_req, res) => {
 });
 
 // ── GET /api/charts/class-engagement ──
-router.get("/class-engagement", (_req, res) => {
+router.get("/class-engagement", (_req: Request, res: Response) => {
   success(res, [
     { week: "S1", ativos: 24, entregas: 88 },
     { week: "S2", ativos: 27, entregas: 102 },
@@ -32,7 +32,7 @@ router.get("/class-engagement", (_req, res) => {
 });
 
 // ── GET /api/charts/platform-growth ──
-router.get("/platform-growth", (_req, res) => {
+router.get("/platform-growth", (_req: Request, res: Response) => {
   success(res, [
     { month: "Jan", schools: 18, students: 1240, teachers: 92 },
     { month: "Fev", schools: 22, students: 1680, teachers: 121 },
@@ -43,7 +43,7 @@ router.get("/platform-growth", (_req, res) => {
 });
 
 // ── GET /api/charts/skills-radar ──
-router.get("/skills-radar", (_req, res) => {
+router.get("/skills-radar", (_req: Request, res: Response) => {
   success(res, [
     { skill: "Matemática", value: 82 },
     { skill: "Português", value: 74 },
