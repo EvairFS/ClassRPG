@@ -8,16 +8,19 @@
 ## ✅ Completado Nesta Sessão
 
 ### Frontend
+
 - [x] Corrigido `vercel.json` - SPA rewrites para client-side routing
 - [x] Atualizado `api.ts` - API base URL dinâmica via `VITE_API_BASE`
 - [x] Criado `.env.production` - Template para URL do backend
 
 ### Backend  
+
 - [x] Confirmado `vercel.json` - Está correto
 - [x] Confirmado `server.js` - Exports e condicional Vercel OK
 - [x] Atualizado `.env.example` - Agora inclui URLs Vercel
 
 ### Migrações Anteriores
+
 - [x] Tailwind CSS v4 com @tailwindcss/postcss
 - [x] Removido Admin do login (mantém Student/Teacher)
 - [x] MockData removido - API real integrada
@@ -29,11 +32,14 @@
 ## 🔧 Configuração Necessária (IMPORTANTE)
 
 ### Seu Backend URL (Vercel)
+
 Você precisa:
+
 1. Acessar [https://vercel.com/dashboard](https://vercel.com/dashboard)
 2. Ir para seu projeto backend
 3. Copiar a URL de produção (ex: `https://classrpg-backend.vercel.app`)
 4. Atualizar `frontend/.env.production`:
+
    ```
    VITE_API_BASE=https://SEU_BACKEND.vercel.app/api
    ```
@@ -41,6 +47,7 @@ Você precisa:
 ### Variáveis de Ambiente (Vercel Dashboard)
 
 **Backend** (`Settings → Environment Variables`):
+
 ```
 NODE_ENV = production
 DATABASE_URL = postgresql://... (Supabase)
@@ -50,6 +57,7 @@ PGSSLMODE = require
 ```
 
 **Frontend** (Vercel pode detectar `.env.production` automaticamente):
+
 ```
 VITE_API_BASE = https://SEU_BACKEND.vercel.app/api
 ```
@@ -80,7 +88,7 @@ cd frontend
 VITE_API_BASE=http://localhost:3001/api npm run dev
 ```
 
-Login em http://localhost:8081 com credenciais de teste do banco.
+Login em <http://localhost:8081> com credenciais de teste do banco.
 
 ---
 
