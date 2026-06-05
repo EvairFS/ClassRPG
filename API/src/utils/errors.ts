@@ -1,54 +1,49 @@
-/**
- * Classe base para erros customizados da API
- */
 export class AppError extends Error {
   public readonly statusCode: number;
+  public readonly isOperational: boolean; // ← adiciona isso
+  public readonly code: string;           // ← e isso
 
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, statusCode: number, code?: string) {
     super(message);
     this.statusCode = statusCode;
+    this.isOperational = true;            // ← sempre true para erros esperados
+    this.code = code || "APP_ERROR";
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
-// ── Erro 400: Bad Request ──
 export class BadRequestError extends AppError {
   constructor(message = "Requisição inválida") {
-    super(message, 400);
+    super(message, 400, "BAD_REQUEST");
   }
 }
 
-// ── Erro 404: Not Found ──
 export class NotFoundError extends AppError {
   constructor(message = "Recurso não encontrado") {
-    super(message, 404);
+    super(message, 404, "NOT_FOUND");
   }
 }
 
-// ── Erro 401: Unauthorized ──
 export class UnauthorizedError extends AppError {
   constructor(message = "Não autorizado") {
-    super(message, 401);
+    super(message, 401, "UNAUTHORIZED");
   }
 }
 
-// ── Erro 403: Forbidden ──
 export class ForbiddenError extends AppError {
   constructor(message = "Acesso proibido") {
-    super(message, 403);
+    super(message, 403, "FORBIDDEN");
   }
 }
 
-// ── Erro de Validação (Resolvendo o validate.ts) ──
-export class ValidationError extends BadRequestError {
-  constructor(message = "Erro de validação nos dados fornecidos") {
-    super(message);
-    this.name = "ValidationError";
-  }
-}
-// ── Erro 409: Conflict ──
 export class ConflictError extends AppError {
   constructor(message = "Conflito de dados") {
-    super(message, 409);
+    super(message, 409, "CONFLICT");
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message = "Erro de validação nos dados fornecidos") {
+    super(message, 400, "VALIDATION_ERROR");
   }
 }

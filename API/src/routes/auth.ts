@@ -85,8 +85,8 @@ router.post("/register", validate(registerSchema), async (req: Request, res: Res
         .slice(0, 2);
         
       await q(
-        "INSERT INTO students (id, name, avatar, email, classroom, xp, level, patent, streak, missions_completed, activities_completed) VALUES ($1,$2,$3,$4,$5,0,1,'Novato',0,0,0)",
-        [userId, name, initials || "ST", email, classroom || "9º Ano"]
+        "INSERT INTO students (id, classroom, xp, level, patent, streak, missions_completed, activities_completed) VALUES ($1,$2,0,1,'Novato',0,0,0)",
+        [userId, classroom || "9º Ano"]
       );
     } else if (role === "teacher") {
       await q(

@@ -32,12 +32,12 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 // ── Vinculação das Rotas da API ──
-app.use("/api/auth", authRoutes); 
+app.use("/api", authRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/missions", missionRoutes);
 app.use("/api/charts", chartRoutes);
-app.use("/api/dashboards", dashboardRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/ranking", rankingRoutes);
 app.use("/api/students", studentRoutes);

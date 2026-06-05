@@ -16,7 +16,7 @@ router.use(requireAuth);
 // ── GET /api/missions (Listar todas as missões) ──
 router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const rows = await q("SELECT * FROM m_missions ORDER BY created_at DESC");
+    const rows = await q("SELECT * FROM missions ORDER BY id");
     success(res, rows);
   } catch (err) {
     next(err);
@@ -26,7 +26,7 @@ router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
 // ── GET /api/missions/:id (Detalhes de uma missão específica) ──
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const mission = await qOne("SELECT * FROM m_missions WHERE id = $1", [req.params.id]);
+    const mission = await qOne("SELECT * FROM missions WHERE id = $1", [req.params.id]);
     if (!mission) throw new NotFoundError("Missão");
     
     success(res, mission);
@@ -44,7 +44,7 @@ router.post("/:id/join", async (req: CustomRequest, res: Response, next: NextFun
     const studentId = req.headers["x-user-id"] || req.user?.id || "s3";
 
     // 1. Verifica se a missão existe
-    const mission = await qOne("SELECT id FROM m_missions WHERE id = $1", [missionId]);
+    const mission = await qOne("SELECT id FROM missions WHERE id = $1", [missionId]);
     if (!mission) throw new NotFoundError("Missão");
 
     // 2. Verifica se o estudante já aceitou essa missão antes para evitar duplicidade
