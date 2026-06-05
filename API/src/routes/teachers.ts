@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { q, qOne } from "../db.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, CustomRequest } from "../middleware/auth.js"; // 🌟 ALTERADO: Importamos o CustomRequest
 import { success } from "../utils/response.js";
 import { NotFoundError } from "../utils/errors.js";
 
@@ -19,7 +19,8 @@ router.get("/", async (_req, res, next) => {
 });
 
 // ── GET /api/teachers/me/current ──
-router.get("/me/current", async (req, res, next) => {
+// 🌟 ALTERADO: Tipamos o 'req' como 'CustomRequest' para liberar o 'req.user'
+router.get("/me/current", async (req: CustomRequest, res, next) => {
   try {
     const teacherId = req.headers["x-user-id"] || req.user?.id || "t1";
     const teacher = await qOne("SELECT * FROM teachers WHERE id = $1", [teacherId]);

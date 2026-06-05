@@ -4,7 +4,7 @@ import { UnauthorizedError } from "../utils/errors.js";
 import { Request, Response, NextFunction } from "express";
 
 // 🛡️ Estendemos o Request do Express para aceitar a propriedade customizada .user do ClassRPG
-interface CustomRequest extends Request {
+export interface CustomRequest extends Request {
   user?: any;
 }
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { q, qOne } from "../db.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, CustomRequest } from "../middleware/auth.js"; // 🌟 ALTERADO: Importamos o CustomRequest
 import { parsePagination } from "../utils/pagination.js";
 import { success } from "../utils/response.js";
 import { NotFoundError } from "../utils/errors.js";
@@ -26,7 +26,8 @@ const STUDENT_WITH_ACHIEVEMENTS = `
 // ── GET /api/students (with pagination) ──
 router.get("/", async (req, res, next) => {
   try {
-    const { page, limit, offset } = parsePagination(req.query);
+    // 🌟 ALTERADO: Adicionado 'as any' para o TypeScript aceitar o req.query na paginação
+    const { page, limit, offset } = parsePagination(req.query as any);
 
     const countResult = await q("SELECT COUNT(*) FROM students");
     const total = parseInt(countResult[0].count, 10);
@@ -45,7 +46,8 @@ router.get("/", async (req, res, next) => {
 });
 
 // ── GET /api/students/me/current ──
-router.get("/me/current", async (req, res, next) => {
+// 🌟 ALTERADO: Tipamos o 'req' como 'CustomRequest' para liberar o 'req.user'
+router.get("/me/current", async (req: CustomRequest, res, next) => {
   try {
     const studentId = req.headers["x-user-id"] || req.user?.id || "s3";
     const rows = await q(`
