@@ -15,6 +15,7 @@ import rankingRoutes from "./src/routes/ranking.js";
 import studentRoutes from "./src/routes/students.js";
 import teacherRoutes from "./src/routes/teachers.js";
 import teamRoutes from "./src/routes/teams.js";
+import battleRoutes from './src/routes/battle.routes.js';
 
 const app = express();
 

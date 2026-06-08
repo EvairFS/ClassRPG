@@ -1,14 +1,14 @@
-import { defineConfig } from "@prisma/config"
-import { Pool } from "pg"
-import { PrismaPg } from "@prisma/adapter-pg"
 import "dotenv/config"
+import { defineConfig } from "prisma/config"
 
 export default defineConfig({
-  earlyAccess: true,
-  migrate: {
-    async adapter() {
-      const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-      return new PrismaPg(pool)
-    }
-  }
+  schema: "prisma/schema.prisma",
+  datasource: {
+    // @ts-ignore
+    url: process.env.DATABASE_URL,
+  },
+  migrations: {
+    // ⚔️ Adicionado o 'npx' na frente para o Windows encontrar o executor local
+    seed: "npx ts-node ./prisma/seed.ts", 
+  },
 })

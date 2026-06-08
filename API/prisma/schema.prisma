@@ -5,3 +5,185 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String         @unique
+  password      String
+  role          String         // 'student' ou 'teacher'
+  name          String
+  teacher       Teacher?
+  student       Student?
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Teacher {
+  id             String     @id @db.Uuid
+  user           User       @relation(fields: [id], references: [id])
+  avatar         String
+  subject        String
+  classes        String[]   @default([])
+  students_count Int        @default(0)
+  status         String     @default("active")
+  missions       Mission[]
+  activities     Activity[]
+
+  @@map("teachers")
+}
+
+model Team {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  emblem    String
+  xp        Int          @default(0)
+  weekly_xp Int          @default(0)
+  motto     String?
+  students  Student[]
+  members   TeamMember[]
+
+  @@map("teams")
+}
+
+model Student {
+  id                   String               @id @db.Uuid
+  user                 User                 @relation(fields: [id], references: [id])
+  classroom            String
+  xp                   Int                  @default(0)
+  level                Int                  @default(1)
+  patent               String               @default("Novato")
+  streak               Int                  @default(0)
+  missions_completed   Int                  @default(0)
+  activities_completed Int                  @default(0)
+  team_id              String?              @db.Uuid
+  team                 Team?                @relation(fields: [team_id], references: [id])
+  team_members         TeamMember[]
+  achievements         StudentAchievement[]
+  student_missions     StudentMissions[]
+
+  // ⚔️ NOVOS CAMPOS DO SISTEMA RPG/COMBATE
+  current_hp           Int                  @default(100)
+  max_hp               Int                  @default(100)
+  gold                 Int                  @default(0)
+
+  @@map("students")
+}
+
+model TeamMember {
+  team_id    String  @db.Uuid
+  student_id String  @db.Uuid
+  team       Team    @relation(fields: [team_id], references: [id])
+  student    Student @relation(fields: [student_id], references: [id])
+
+  @@id([team_id, student_id])
+  @@map("team_members")
+}
+
+model Achievement {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String
+  icon        String
+  rarity      String
+  students    StudentAchievement[]
+
+  @@map("achievements")
+}
+
+model StudentAchievement {
+  student_id     String      @db.Uuid
+  achievement_id String      @db.Uuid
+  earned         Boolean     @default(false)
+  earned_at      DateTime?   @db.Timestamptz
+  progress       Int?        @default(0)
+  student        Student     @relation(fields: [student_id], references: [id])
+  achievement    Achievement @relation(fields: [achievement_id], references: [id])
+
+  @@id([student_id, achievement_id])
+  @@map("student_achievements")
+}
+
+model Mission {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String
+  description      String
+  type             String            // 'daily', 'weekly', 'special', etc.
+  difficulty       String            // 'Easy', 'Medium', 'Hard', 'Epic'
+  xp_reward        Int
+  deadline         DateTime          @db.Timestamptz
+  teacher_id       String?           @db.Uuid
+  teacher          Teacher?          @relation(fields: [teacher_id], references: [id])
+  student_missions StudentMissions[]
+  
+  // ⚔️ NOVOS CAMPOS DO SISTEMA RPG/COMBATE (Monstro da Missão)
+  monster_hp       Int               @default(100)
+  gold_reward      Int               @default(0)
+  questions        Question[]
+
+  @@map("missions")
+}
+
+// ⚔️ NOVA TABELA: Banco de perguntas associadas ao Monstro/Missão
+model Question {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mission_id    String   @db.Uuid
+  mission       Mission  @relation(fields: [mission_id], references: [id], onDelete: Cascade)
+  statement     String
+  options       String[] @default([]) // Array de strings do PostgreSQL
+  correct_index Int      // Índice da resposta certa (0, 1, 2, 3...)
+  damage        Int      @default(25)
+
+  @@map("questions")
+}
+
+model StudentMissions {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  student_id String   @db.Uuid
+  student    Student  @relation(fields: [student_id], references: [id])
+  mission_id String   @db.Uuid
+  mission    Mission  @relation(fields: [mission_id], references: [id])
+  progress   Int      @default(0)
+  total      Int
+  status     String   @default("IN_PROGRESS")
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @db.Timestamptz
+
+  // ⚔️ NOVOS CAMPOS DO SISTEMA RPG/COMBATE (Salva o estado atual desta batalha do aluno)
+  current_monster_hp Int?
+  current_student_hp Int?
+
+  @@map("student_missions")
+}
+
+model Activity {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String
+  description  String
+  subject      String
+  difficulty   String
+  xp_reward    Int
+  deadline     DateTime  @db.Timestamptz
+  status       String    @default("pending")
+  grade        Int?
+  instructions String?
+  submission   String?
+  feedback     String?
+  teacher_id   String?   @db.Uuid
+  teacher      Teacher?  @relation(fields: [teacher_id], references: [id])
+
+  @@map("activities")
+}
+
+model Notification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title      String
+  body       String
+  type       String
+  read       Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+  user_id    String?  @db.Uuid
+  user       User?    @relation(fields: [user_id], references: [id])
+
+  @@map("notifications")
+}
