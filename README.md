@@ -209,21 +209,21 @@ frontend/src/
 ### Estrutura
 
 ```
-backend/
-├── server.js               ← Entry point, monta middlewares e rotas
+API/
+├── server.ts               ← Entry point, monta middlewares e rotas
 ├── schema.sql              ← DDL completo do banco
 └── src/
-    ├── config.js           ← Variáveis de ambiente
-    ├── db.js               ← Pool de conexão e helpers de query
+    ├── config.ts           ← Variáveis de ambiente
+    ├── db.ts               ← Pool de conexão e helpers de query
     ├── middleware/
-    │   ├── auth.js         ← JWT: requireAuth, optionalAuth, requireRole
-    │   ├── errorHandler.js ← Tratamento centralizado de erros
-    │   └── validate.js     ← Validação com Zod
+    │   ├── auth.ts         ← JWT: requireAuth, optionalAuth, requireRole
+    │   ├── errorHandler.ts ← Tratamento centralizado de erros
+    │   └── validate.ts     ← Validação com Zod
     ├── routes/             ← Um arquivo por recurso
     └── utils/
-        ├── errors.js       ← Classes de erro customizadas
-        ├── pagination.js   ← Parsing de ?page= e ?limit=
-        └── response.js     ← Helpers success(), created(), paginated()
+        ├── errors.ts       ← Classes de erro customizadas
+        ├── pagination.ts   ← Parsing de ?page= e ?limit=
+        └── response.ts     ← Helpers success(), created(), paginated()
 ```
 
 ### Endpoints
