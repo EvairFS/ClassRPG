@@ -31,12 +31,15 @@ const TABS: { value: Mission["type"] | "all"; label: string; icon: React.Element
 
 function MissionsPage() {
   const [tab, setTab] = useState<Mission["type"] | "all">("all");
-  const { hydrated, isAuthenticated } = useAuth();
+  const { hydrated, isAuthenticated, token, user } = useAuth();
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["missions"],
-    queryFn: api.getMissions,
-    enabled: hydrated && isAuthenticated,
+    queryFn: () => api.getMissions(token!), // <--- Aqui está o segredo
+    enabled: hydrated && isAuthenticated && !!token,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
   });
+
   const missions = data ?? [];
   const weeklyXp = missions
     .filter((m) => m.status === "completed")
@@ -65,14 +68,18 @@ function MissionsPage() {
           <div className="pointer-events-none absolute -top-20 right-0 size-72 rounded-full bg-primary/25 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Acumulado da semana</p>
-              <p className="mt-1 text-3xl font-bold text-foreground">{weeklyXp.toLocaleString("pt-BR")} XP</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Acumulado da semana
+              </p>
+              <p className="mt-1 text-3xl font-bold text-foreground">
+                {weeklyXp.toLocaleString("pt-BR")} XP
+              </p>
               <p className="text-xs text-muted-foreground">de 2.000 XP — meta semanal</p>
             </div>
             <div className="flex-1 min-w-[200px] max-w-md">
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
                 <div
-                  className="h-full animate-xp-fill rounded-full bg-gradient-to-r from-primary to-secondary"
+                  className="h-full animate-xp-fill rounded-full bg-linear-to-r from-primary to-secondary"
                   style={{ width: `${Math.min(100, (weeklyXp / 2000) * 100)}%` }}
                 />
               </div>

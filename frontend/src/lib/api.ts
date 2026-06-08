@@ -184,7 +184,7 @@ export const api = {
       body: { submission, studentId },
     }),
 
-  getMissions: () => request<Mission[]>("/missions"),
+  getMissions: (p0: string) => request<Mission[]>("/missions"),
   getAchievements: () => request<Achievement[]>("/achievements"),
   getTeams: () => request<Team[]>("/teams"),
   getRanking: () =>

@@ -197,7 +197,7 @@ export const api = {
     return res.json();
   },
 
-async createMission(missionData: any, token: string): Promise<Mission> {
+  async createMission(missionData: unknown, token: string): Promise<Mission> {
     const res = await fetch(`${BASE_URL}/missions`, {
       method: "POST",
       headers: getHeaders(token),
@@ -207,7 +207,7 @@ async createMission(missionData: any, token: string): Promise<Mission> {
     return res.json();
   },
 
-  async joinMission(missionId: string, token: string): Promise<any> {
+  async joinMission(missionId: string, token: string): Promise<unknown> {
     const res = await fetch(`${BASE_URL}/missions/${missionId}/join`, {
       method: "POST",
       headers: getHeaders(token),
@@ -216,7 +216,7 @@ async createMission(missionData: any, token: string): Promise<Mission> {
     return res.json();
   },
 
-  async answerQuestion(questionId: string, index: number, token: string): Promise<any> {
+  async answerQuestion(questionId: string, index: number, token: string): Promise<unknown> {
     const res = await fetch(`${BASE_URL}/missions/answer`, {
       method: "POST",
       headers: getHeaders(token),
@@ -226,7 +226,7 @@ async createMission(missionData: any, token: string): Promise<Mission> {
     return res.json();
   },
 
-  async getMissionStatus(missionId: string, token: string): Promise<any> {
+  async getMissionStatus(missionId: string, token: string): Promise<unknown> {
     const res = await fetch(`${BASE_URL}/missions/${missionId}/status`, {
       headers: getHeaders(token),
     });
@@ -240,5 +240,18 @@ async createMission(missionData: any, token: string): Promise<Mission> {
     });
     if (!res.ok) throw new Error("Falha ao buscar missões do professor");
     return res.json();
-  }
+  },
+
+  async createActivity(
+    activityData: { title: string; description: string; xp_reward: number; deadline: string },
+    token: string,
+  ) {
+    const res = await fetch(`${BASE_URL}/activities`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(activityData),
+    });
+    if (!res.ok) throw new Error("Falha ao criar atividade");
+    return res.json();
+  },
 };
