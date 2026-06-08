@@ -2,21 +2,24 @@
 
 Plataforma web de gamificação educacional. Transforma a rotina de sala de aula em um RPG — alunos ganham XP, sobem de nível, completam missões e competem no ranking enquanto realizam atividades escolares.
 
+🌐 **Demo:** [classrpg.classrpg.workers.dev](https://classrpg.classrpg.workers.dev/) · **API:** [class-rpg-t11x.vercel.app/api/health](https://class-rpg-t11x.vercel.app/api/health)
+
 ---
 
 ## Sumário
 
 - [Visão Geral](#visão-geral)
+- [Como rodar localmente](#como-rodar-localmente)
+- [Banco de Dados](#banco-de-dados)
 - [Frontend](#frontend)
 - [Backend](#backend)
-- [Banco de Dados](#banco-de-dados)
 - [Deploy](#deploy)
 
 ---
 
 ## Visão Geral
 
-O ClassRPG é um monorepo com duas aplicações independentes: um frontend em React e um backend em Node.js/Express, conectados a um banco PostgreSQL (Supabase).
+O ClassRPG é um monorepo com duas aplicações independentes: um frontend em React e um backend em Node.js/Express, conectados a um banco PostgreSQL hospedado no Supabase.
 
 ```
 ClassRPG/
@@ -35,6 +38,114 @@ ClassRPG/
 | Guerreiro Acadêmico | 1.500 |
 | Mestre Estratégico | 3.500 |
 | Lenda da Turma | 7.000 |
+
+---
+
+## Como rodar localmente
+
+### Pré-requisitos
+
+- Node.js 18+
+- npm 9+
+- PostgreSQL 14+ (local ou Supabase)
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/EvairFS/ClassRPG.git
+cd ClassRPG
+```
+
+### 2. Configure o Backend
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Edite o `.env` com suas credenciais:
+
+```env
+PORT=3001
+NODE_ENV=development
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/classrpg
+JWT_SECRET=sua_chave_secreta
+CORS_ORIGIN=http://localhost:5173
+PGSSLMODE=disable
+```
+
+Instale as dependências e inicie:
+
+```bash
+npm install
+npm run dev
+```
+
+A API estará disponível em `http://localhost:3001`.
+
+### 3. Configure o Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O frontend estará disponível em `http://localhost:5173`.
+
+### Usuários de teste
+
+| Perfil | E-mail | Senha |
+|---|---|---|
+| Aluno | `aluno@classrpg.com` | `aluno123` |
+| Professor | `prof@classrpg.com` | `professor123` |
+
+> Para criar esses usuários, rode o script `backend/seed_test_users.sql` no seu banco.
+
+---
+
+## Banco de Dados
+
+PostgreSQL com 10 tabelas. O schema completo está em `backend/schema.sql`.
+
+### Configurar o banco
+
+**Opção 1 — Supabase (recomendado para produção)**
+
+1. Crie um projeto em [supabase.com](https://supabase.com)
+2. Acesse **SQL Editor** e execute o conteúdo de `backend/schema.sql`
+3. Copie a **Connection String (pooler)** e use como `DATABASE_URL`
+
+**Opção 2 — PostgreSQL local**
+
+```bash
+psql -U postgres -c "CREATE DATABASE classrpg;"
+psql -U postgres -d classrpg -f backend/schema.sql
+```
+
+**Opção 3 — Docker**
+
+```bash
+docker run --name classrpg-db \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=classrpg \
+  -p 5432:5432 -d postgres:16
+```
+
+### Tabelas
+
+| Tabela | Descrição |
+|---|---|
+| `users` | Credenciais de login (email + senha bcrypt + role) |
+| `students` | Perfil gamificado: XP, nível, patente, streak |
+| `teachers` | Perfil do professor: matéria, turmas, status |
+| `teams` | Equipes com XP coletivo e XP semanal |
+| `team_members` | Pivô N:N alunos ↔ equipes |
+| `achievements` | Conquistas com raridade |
+| `student_achievements` | Progresso de cada aluno em cada conquista |
+| `missions` | Missões diárias/semanais/especiais com XP reward |
+| `activities` | Tarefas escolares com dificuldade, prazo e nota |
+| `notifications` | Notificações por usuário (XP, missão, conquista, sistema) |
 
 ---
 
@@ -61,7 +172,6 @@ ClassRPG/
 frontend/src/
 ├── api.ts                  ← Todos os calls HTTP centralizados
 ├── types/index.ts          ← Tipagem global (Student, Teacher, Mission…)
-├── data/mockData.ts        ← Dados de desenvolvimento
 ├── lib/
 │   ├── gamification.ts     ← Lógica de XP, níveis e patentes
 │   └── utils.ts            ← Helpers (cn)
@@ -74,30 +184,11 @@ frontend/src/
 └── index.css               ← Tema visual dark RPG
 ```
 
-### Tema visual
-
-Visual dark com estética RPG definido via variáveis CSS no `@theme` do Tailwind v4:
-
-- **Background:** azul-escuro quase preto
-- **Primary:** azul vibrante (ações, botões)
-- **Accent:** dourado (XP, destaques, conquistas)
-- **Border-radius:** `0px` — visual quadrado/angular
-- **Animações:** `xp-fill` (barra de XP), `xp-pop` (número flutuante +XP), `fade-up`, `beam-reveal`
-
-### Lógica de gamificação (`lib/gamification.ts`)
-
-Toda a lógica de progressão fica desacoplada dos componentes:
-
-- **Nível:** `floor(xp / 250) + 1` — a cada 250 XP sobe um nível
-- **Patente:** calculada por faixas de XP, cada uma com nome e cor
-- **Dificuldades:** Easy / Medium / Hard / Epic com multiplicadores 1×, 1.5×, 2× e 3×
-- **Raridade de conquistas:** common, rare, epic, legendary
-
-### Variável de ambiente
+### Variáveis de ambiente
 
 | Variável | Descrição |
 |---|---|
-| `VITE_API_BASE` | URL base da API (ex: `https://classrpg-api.vercel.app/api`) |
+| `VITE_API_BASE` | URL base da API (ex: `https://class-rpg-t11x.vercel.app/api`) |
 
 ---
 
@@ -120,6 +211,7 @@ Toda a lógica de progressão fica desacoplada dos componentes:
 ```
 backend/
 ├── server.js               ← Entry point, monta middlewares e rotas
+├── schema.sql              ← DDL completo do banco
 └── src/
     ├── config.js           ← Variáveis de ambiente
     ├── db.js               ← Pool de conexão e helpers de query
@@ -169,32 +261,13 @@ JWT com expiração de 7 dias. O payload contém `{ id, email, role, name }`.
 | `JWT_SECRET` | Chave secreta para assinar tokens |
 | `CORS_ORIGIN` | URL do frontend (ex: `https://classrpg.vercel.app`) |
 | `NODE_ENV` | `production` em produção |
-| `PGSSLMODE` | `require` para conexões SSL |
-
----
-
-## Banco de Dados
-
-PostgreSQL com 9 tabelas:
-
-| Tabela | Descrição |
-|---|---|
-| `users` | Credenciais de login (email + senha bcrypt + role) |
-| `students` | Perfil gamificado: XP, nível, patente, streak |
-| `teachers` | Perfil do professor: matéria, turmas, status |
-| `teams` | Equipes com XP coletivo e XP semanal |
-| `team_members` | Pivô N:N alunos ↔ equipes |
-| `achievements` | Conquistas com raridade |
-| `student_achievements` | Progresso de cada aluno em cada conquista |
-| `missions` | Missões diárias/semanais/especiais com XP reward |
-| `activities` | Tarefas escolares com dificuldade, prazo e nota |
-| `notifications` | Notificações por usuário (XP, missão, conquista, sistema) |
+| `PGSSLMODE` | `require` para conexões SSL (Supabase) |
 
 ---
 
 ## Deploy
 
-O projeto é hospedado na **Vercel** como dois projetos separados.
+O projeto é hospedado na **Vercel** como dois projetos separados, com banco no **Supabase**.
 
 ### Frontend
 
@@ -208,4 +281,8 @@ O projeto é hospedado na **Vercel** como dois projetos separados.
 - **Framework:** Other
 - **Variáveis obrigatórias:** `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN`, `NODE_ENV`, `PGSSLMODE`
 
-> O banco de dados permanece no **Supabase** (PostgreSQL). Apenas as aplicações rodam na Vercel.
+---
+
+## Licença
+
+MIT © [EvairFS](https://github.com/EvairFS)
