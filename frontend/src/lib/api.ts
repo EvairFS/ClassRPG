@@ -10,12 +10,10 @@ import type {
 } from "@/types";
 
 const BASE_URL =
-  (import.meta.env.VITE_API_BASE as string | undefined) ??
-  "http://localhost:3001/api";
+  (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:3001/api";
 
 // ── snake_case → camelCase deep transform ──────────────────────────────
-const snakeToCamel = (key: string) =>
-  key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+const snakeToCamel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 
 function camelize<T = unknown>(input: unknown): T {
   if (Array.isArray(input)) return input.map((v) => camelize(v)) as unknown as T;
@@ -95,11 +93,7 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 
   if (!res.ok) {
     const errObj = payload as { error?: string; code?: string } | null;
-    throw new ApiError(
-      errObj?.error ?? `Erro ${res.status}`,
-      res.status,
-      errObj?.code,
-    );
+    throw new ApiError(errObj?.error ?? `Erro ${res.status}`, res.status, errObj?.code);
   }
 
   // Backend wraps every success as { data, meta? }
@@ -184,11 +178,14 @@ export const api = {
       body: { submission, studentId },
     }),
 
+  joinMission: (missionId: string) =>
+    request<unknown>(`/missions/${missionId}/join`, {
+      method: "POST",
+    }),
   getMissions: (p0: string) => request<Mission[]>("/missions"),
   getAchievements: () => request<Achievement[]>("/achievements"),
   getTeams: () => request<Team[]>("/teams"),
-  getRanking: () =>
-    request<{ rank: number; student: Student }[]>("/ranking"),
+  getRanking: () => request<{ rank: number; student: Student }[]>("/ranking"),
 
   getNotifications: () => request<NotificationItem[]>("/notifications"),
   markNotificationRead: (id: string) =>

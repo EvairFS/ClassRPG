@@ -1,6 +1,50 @@
-import { q } from "../db.js"; // 🌟 ALTERADO: Usamos a mesma função de banco do resto do app
+import { q } from "../db.js"; // 🌟 Mantendo a sua função de banco padronizada
 
 export const missionService = {
+  /**
+   * Permite que um aluno aceite/entre em uma missão ativa.
+   */
+  async joinMission(missionId: string, studentId: string) {
+    // 1. Busca os dados iniciais da missão (HP do monstro e total de perguntas)
+    // NOTA: Confirme se na tabela 'missions' os nomes são 'monster_hp' e 'total_steps' (ou 'total_questions')
+    const missions = await q(
+      "SELECT monster_hp, total_steps FROM missions WHERE id = $1",
+      [missionId]
+    );
+
+    if (missions.length === 0) {
+      throw new Error("MISSION_NOT_FOUND");
+    }
+
+    const { monster_hp, total_steps } = missions[0];
+
+    // 2. Verifica se o aluno já aceitou essa missão anteriormente para não duplicar
+    const existingJoin = await q(
+      "SELECT id FROM student_missions WHERE student_id = $1 AND mission_id = $2",
+      [studentId, missionId]
+    );
+
+    if (existingJoin.length > 0) {
+      throw new Error("ALREADY_JOINED");
+    }
+
+    // 3. Insere o registro na tabela student_missions (com progresso 0 e HP do aluno em 100)
+    const newJoin = await q(`
+      INSERT INTO student_missions (
+        student_id, 
+        mission_id, 
+        progress, 
+        total, 
+        status, 
+        current_monster_hp, 
+        current_student_hp
+      ) VALUES ($1, $2, 0, $3, 'IN_PROGRESS', $4, 100) 
+      RETURNING *
+    `, [studentId, missionId, total_steps, monster_hp]);
+
+    return newJoin[0];
+  },
+
   /**
    * Atualiza o progresso das missões de um aluno baseado em uma ação específica.
    */
@@ -28,14 +72,12 @@ export const missionService = {
 
       // 3. Se completou a missão, aplica as recompensas de XP e gera a notificação
       if (isCompleted) {
-        // No seu projeto a tabela se chama 'students' (como vimos em students.ts)
         await q(`
           UPDATE students 
           SET xp = xp + $1 
           WHERE id = $2
         `, [studentMission.xp_reward, studentId]);
         
-        // Cria o registro de notificação para o front-end ler
         await q(`
           INSERT INTO notifications (student_id, title, message) 
           VALUES ($1, $2, $3)

@@ -1,5 +1,5 @@
 import { Student } from "@/types";
-import { getLevelInfo } from "@/lib/gamification";
+import { getLevelInfo, getPatent } from "@/lib/gamification";
 
 interface RankingTableProps {
   students: Student[];
@@ -29,6 +29,7 @@ const RankingTable = ({ students, currentUserId, compact = false }: RankingTable
         </div>
         {displayed.map((student, i) => {
           const info = getLevelInfo(student.xp);
+          const { current } = getPatent(student.xp);
           const isCurrentUser = student.id === currentUserId;
           const isTop3 = i < 3;
           return (
@@ -58,7 +59,7 @@ const RankingTable = ({ students, currentUserId, compact = false }: RankingTable
                 </span>
               </div>
               <span className="text-right text-xs text-muted-foreground font-body">
-                {info.name}
+                {current.name}
               </span>
               <span
                 className={`text-right font-display text-sm ${isTop3 ? "text-accent" : "text-foreground"}`}

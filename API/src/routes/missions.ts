@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { Router, Request, Response, NextFunction } from "express";
 import { q, qOne } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -13,7 +14,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-// ── POST /api/missions (Atualizada para pegar o ID do professor logado) ──
+// ── POST /api/missions (Criar nova missão - Professor) ──
 router.post("/", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const { title, description, monster_hp, xp_reward, gold_reward, type, difficulty, deadline } = req.body;
@@ -53,15 +54,17 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 router.post("/:id/join", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
-    
-    // Captura o ID do estudante de forma segura
-    const studentId = req.headers["x-user-id"] || req.user?.id || "s3";
+    const studentId = req.user?.id; 
 
-    // 1. Verifica se a missão existe
-    const mission = await qOne("SELECT id FROM missions WHERE id = $1", [missionId]);
+    if (!studentId) {
+      throw new BadRequestError("Estudante não identificado na sessão.");
+    }
+
+    // 1. Verifica se a missão existe e busca o monster_hp original
+    const mission = await qOne("SELECT id, monster_hp FROM missions WHERE id = $1", [missionId]);
     if (!mission) throw new NotFoundError("Missão");
 
-    // 2. Verifica se o estudante já aceitou essa missão antes para evitar duplicidade
+    // 2. Verifica se o estudante já aceitou essa missão antes
     const alreadyJoined = await qOne(
       "SELECT id FROM student_missions WHERE student_id = $1 AND mission_id = $2",
       [studentId, missionId]
@@ -70,12 +73,24 @@ router.post("/:id/join", async (req: CustomRequest, res: Response, next: NextFun
       throw new BadRequestError("Você já está participando desta missão.");
     }
 
-    // 3. Vincula o estudante à missão no banco de dados (tabela intermediária)
-    const joinId = `sm${Date.now()}`;
+    // 🌟 GERANDO O UUID MANUALMENTE PARA O BANCO NÃO RECLAMAR
+    const studentMissionId = randomUUID();
+
+    // 3. Vincula o estudante à missão preenchendo IDs, Status e as Datas de criação/atualização
     const rows = await q(
-      `INSERT INTO student_missions (id, student_id, mission_id, status, progress) 
-       VALUES ($1, $2, $3, 'active', 0) RETURNING *`,
-      [joinId, studentId, missionId]
+      `INSERT INTO student_missions (
+        id,
+        student_id, 
+        mission_id, 
+        status, 
+        progress, 
+        total, 
+        current_monster_hp, 
+        current_student_hp,
+        created_at,
+        updated_at
+      ) VALUES ($1, $2, $3, 'IN_PROGRESS', 0, $4, $4, 100, NOW(), NOW()) RETURNING *`,
+      [studentMissionId, studentId, missionId, Number(mission.monster_hp)]
     );
 
     created(res, rows[0]);
@@ -93,8 +108,9 @@ router.get("/my-missions", async (req: CustomRequest, res: Response, next: NextF
       throw new BadRequestError("Professor não identificado.");
     }
 
+    // 🌟 CORREÇÃO: Removido o ORDER BY baseado em coluna inexistente para evitar Erro 500
     const missions = await q(
-      "SELECT * FROM missions WHERE teacher_id = $1 ORDER BY created_at DESC",
+      "SELECT * FROM missions WHERE teacher_id = $1",
       [teacherId]
     );
 
@@ -110,13 +126,11 @@ router.delete("/:id", async (req: CustomRequest, res: Response, next: NextFuncti
     const missionId = req.params.id;
     const teacherId = req.user?.id;
 
-    // Tenta deletar apenas se a missão pertencer ao professor logado
     const result = await q(
       "DELETE FROM missions WHERE id = $1 AND teacher_id = $2 RETURNING *",
       [missionId, teacherId]
     );
 
-    // Se 'result.length' for 0, significa que não deletou nada (missão não existe ou não é dele)
     if (result.length === 0) {
       throw new NotFoundError("Missão não encontrada ou você não tem permissão para deletá-la.");
     }
@@ -137,10 +151,8 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       throw new BadRequestError("ID da pergunta e índice da resposta são obrigatórios.");
     }
 
-    // 1. Inicia uma transação no banco
     await q("BEGIN");
 
-    // 2. Valida se já respondeu corretamente antes
     const alreadyAnswered = await qOne(
       "SELECT id FROM student_battle_logs WHERE student_id = $1 AND question_id = $2 AND is_correct = true",
       [studentId, question_id]
@@ -151,23 +163,19 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       throw new BadRequestError("Você já respondeu corretamente esta pergunta!");
     }
 
-    // 3. Busca a pergunta
     const question = await qOne("SELECT * FROM questions WHERE id = $1", [question_id]);
     if (!question) {
       await q("ROLLBACK");
       throw new NotFoundError("Pergunta não encontrada.");
     }
     
-    // 4. Lógica de acerto/erro
     const isCorrect = student_answer_index === question.correct_index;
 
-    // 5. Registra o log
     await q(
       "INSERT INTO student_battle_logs (student_id, question_id, is_correct) VALUES ($1, $2, $3)",
       [studentId, question_id, isCorrect]
     );
 
-    // 6. SE ACERTOU: Atualiza o progresso do aluno na missão
     if (isCorrect) {
       await q(
         `UPDATE student_missions 
@@ -177,7 +185,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       );
     }
 
-    // 7. Finaliza a transação
     await q("COMMIT");
 
     success(res, {
@@ -186,7 +193,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       message: isCorrect ? "Acertou! O HP do monstro diminuiu." : "Resposta incorreta!"
     });
   } catch (err) {
-    // Se algo falhar, desfaz as alterações (ROLLBACK)
     await q("ROLLBACK");
     next(err);
   }
@@ -198,7 +204,6 @@ router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFu
     const studentId = req.user?.id;
     const missionId = req.params.id;
 
-    // Busca o HP do monstro e o progresso do aluno na missão
     const result = await qOne(
       `SELECT m.monster_hp, sm.progress 
        FROM student_missions sm
@@ -217,6 +222,32 @@ router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFu
       is_defeated: defeated,
       message: defeated ? "Parabéns! Monstro derrotado!" : "O monstro ainda está vivo."
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /api/missions (Buscar TODAS as missões com o progresso do aluno logado) ──
+router.get("/", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const studentId = req.user?.id; // Captura o ID do aluno logado pelo token
+
+    // Usamos LEFT JOIN para trazer todas as missões, e se o aluno tiver um registro nelas, traz os dados de progresso.
+    // O COALESCE garante que se não houver registro, o progresso venha como 0 e o total seja o HP do monstro.
+    const queryText = `
+      SELECT 
+        m.*, 
+        sm.status, 
+        COALESCE(sm.progress, 0) as progress, 
+        COALESCE(sm.total, m.monster_hp) as total
+      FROM missions m
+      LEFT JOIN student_missions sm 
+        ON sm.mission_id = m.id AND sm.student_id = $1
+    `;
+
+    const missions = await q(queryText, [studentId]);
+    
+    success(res, missions);
   } catch (err) {
     next(err);
   }

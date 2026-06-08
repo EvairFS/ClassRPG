@@ -42,12 +42,7 @@ export function ProfileHeader({ student }: { student: Student }) {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 md:gap-4">
-          <Mini
-          label="XP total"
-            value={xpTotal}
-            icon={Trophy}
-            tint="text-accent"
-          />
+          <Mini label="XP total" value={xpTotal} icon={Trophy} tint="text-accent" />
           <Mini label="Sequência" value={`${sequencia}d`} icon={Flame} tint="text-rose-300" />
           <Mini label="Missões" value={missoes} icon={Sparkles} tint="text-primary" />
         </div>
