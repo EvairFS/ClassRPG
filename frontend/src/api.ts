@@ -196,4 +196,49 @@ export const api = {
     if (!res.ok) throw new Error("Failed to grade activity");
     return res.json();
   },
+
+async createMission(missionData: any, token: string): Promise<Mission> {
+    const res = await fetch(`${BASE_URL}/missions`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify(missionData),
+    });
+    if (!res.ok) throw new Error("Falha ao criar missão");
+    return res.json();
+  },
+
+  async joinMission(missionId: string, token: string): Promise<any> {
+    const res = await fetch(`${BASE_URL}/missions/${missionId}/join`, {
+      method: "POST",
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Falha ao entrar na missão");
+    return res.json();
+  },
+
+  async answerQuestion(questionId: string, index: number, token: string): Promise<any> {
+    const res = await fetch(`${BASE_URL}/missions/answer`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify({ question_id: questionId, student_answer_index: index }),
+    });
+    if (!res.ok) throw new Error("Falha ao responder pergunta");
+    return res.json();
+  },
+
+  async getMissionStatus(missionId: string, token: string): Promise<any> {
+    const res = await fetch(`${BASE_URL}/missions/${missionId}/status`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Falha ao buscar status da missão");
+    return res.json();
+  },
+
+  async getMyMissions(token: string): Promise<Mission[]> {
+    const res = await fetch(`${BASE_URL}/missions/my-missions`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Falha ao buscar missões do professor");
+    return res.json();
+  }
 };

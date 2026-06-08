@@ -44,6 +44,7 @@ app.use("/api/ranking", rankingRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/battles", battleRoutes);
 
 // ── Middleware de Tratamento de Erros (Sempre por último!) ──
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
