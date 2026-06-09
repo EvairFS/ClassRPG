@@ -68,7 +68,7 @@ export interface ActivityItem {
   difficulty: Difficulty;
   xpReward: number;
   deadline: string;
-  status: "pending" | "submitted" | "graded";
+  status: "active" | "pending" | "submitted" | "graded" | "completed";
   grade?: number;
   instructions?: string;
   attachments?: { name: string; size: string }[];

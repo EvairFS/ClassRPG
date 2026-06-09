@@ -2,7 +2,8 @@ import type { Mission } from "@/types";
 import { DifficultyBadge } from "./DifficultyBadge";
 import { Clock, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useJoinMission } from "@/hooks/useMissions"; // 🌟 Importando o hook de mutação
+import { useJoinMission } from "@/hooks/useMissions";
+import { useNavigate } from "@tanstack/react-router";
 
 const TYPE_LABEL: Record<Mission["type"], string> = {
   daily: "Diária",
@@ -12,21 +13,25 @@ const TYPE_LABEL: Record<Mission["type"], string> = {
   challenge: "Desafio",
 };
 
+// EXPORT NOMEADO GARANTIDO: Alinhado com o que o roteador e as páginas esperam
 export function MissionCard({ mission, className }: { mission: Mission; className?: string }) {
-  const { mutate: joinMission, isPending } = useJoinMission(); // ⚔️ Inicializando a mutação
+  const { mutate: joinMission, isPending } = useJoinMission();
+  const navigate = useNavigate();
 
   const pct = Math.min(100, (mission.progress / mission.total) * 100);
   const completed = mission.status?.toLowerCase() === "completed";
   const inProgress =
     mission.status?.toLowerCase() === "active" || mission.status?.toUpperCase() === "IN_PROGRESS";
 
-  // Lógica do clique do botão baseado no estado atual da missão
   const handleAction = () => {
     if (!mission.status) {
       joinMission(mission.id);
     } else if (inProgress) {
-      // 🛡️ Próximo passo: Abrir o modal ou tela de combate
-      console.log("Abrindo arena de combate para a missão:", mission.id);
+      // Navegação segura para a Arena de Combate passando o ID da missão
+      navigate({
+        to: "/combat/$missionId",
+        params: { missionId: mission.id },
+      });
     }
   };
 
@@ -47,7 +52,7 @@ export function MissionCard({ mission, className }: { mission: Mission; classNam
         <h3 className="text-base font-semibold leading-snug text-foreground">{mission.title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{mission.description}</p>
 
-        {/* Só exibe a barra de progresso se o aluno já tiver aceitado a missão */}
+        {/* Barra de progresso baseada no estado da missão */}
         {mission.status && (
           <div className="mt-4">
             <div className="mb-1.5 flex items-center justify-between text-xs text-muted-foreground">
@@ -85,7 +90,6 @@ export function MissionCard({ mission, className }: { mission: Mission; classNam
           </span>
         </div>
 
-        {/* 🌟 NOVO: Botão Dinâmico de Ação de RPG */}
         <button
           onClick={handleAction}
           disabled={isPending || completed}

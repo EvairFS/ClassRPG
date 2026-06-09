@@ -132,6 +132,20 @@ export interface SubmitActivityResponse {
   xpEarned: number;
 }
 
+interface Question {
+  id: string | number;
+  text: string;
+  options: string[];
+  correctIndex: number;
+}
+
+interface MissionWithQuestions {
+  id: string;
+  title: string;
+  xpReward: number;
+  questions: Question[];
+}
+
 // ── Public API surface ─────────────────────────────────────────────────
 export const api = {
   // Auth
@@ -190,6 +204,31 @@ export const api = {
   getNotifications: () => request<NotificationItem[]>("/notifications"),
   markNotificationRead: (id: string) =>
     request<NotificationItem>(`/notifications/${id}/read`, { method: "PATCH" }),
+
+  // 🌟 ADICIONE ESTES DOIS MÉTODOS NO FINAL DO OBJETO 'api':
+  createMission: (data: unknown) =>
+    request<unknown>("/missions", {
+      method: "POST",
+      body: data,
+    }),
+
+  createActivity: (data: unknown) =>
+    request<unknown>("/activities", {
+      method: "POST",
+      body: data,
+    }),
+
+  // Combat / Mission with questions
+  getMissionCombat: (missionId: string) => request<MissionWithQuestions>(`/missions/${missionId}`),
+
+  finishMissionCombat: (
+    missionId: string,
+    payload: { status: "completed" | "failed"; xpEarned: number },
+  ) =>
+    request<unknown>(`/missions/${missionId}/finish`, {
+      method: "POST",
+      body: payload,
+    }),
 };
 
 interface AuthUserResponse {

@@ -22,6 +22,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeacherManageRouteImport } from './routes/teacher.manage'
+import { Route as CombatMissionIdRouteImport } from './routes/combat.$missionId'
 import { Route as ActivityIdRouteImport } from './routes/activity.$id'
 
 const TeamsRoute = TeamsRouteImport.update({
@@ -89,6 +91,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherManageRoute = TeacherManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const CombatMissionIdRoute = CombatMissionIdRouteImport.update({
+  id: '/combat/$missionId',
+  path: '/combat/$missionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ActivityIdRoute = ActivityIdRouteImport.update({
   id: '/activity/$id',
   path: '/activity/$id',
@@ -107,9 +119,11 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
-  '/teacher': typeof TeacherRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
   '/activity/$id': typeof ActivityIdRoute
+  '/combat/$missionId': typeof CombatMissionIdRoute
+  '/teacher/manage': typeof TeacherManageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,9 +137,11 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
-  '/teacher': typeof TeacherRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
   '/activity/$id': typeof ActivityIdRoute
+  '/combat/$missionId': typeof CombatMissionIdRoute
+  '/teacher/manage': typeof TeacherManageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,9 +156,11 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reports': typeof ReportsRoute
   '/student': typeof StudentRoute
-  '/teacher': typeof TeacherRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
   '/activity/$id': typeof ActivityIdRoute
+  '/combat/$missionId': typeof CombatMissionIdRoute
+  '/teacher/manage': typeof TeacherManageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +179,8 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/teams'
     | '/activity/$id'
+    | '/combat/$missionId'
+    | '/teacher/manage'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +197,8 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/teams'
     | '/activity/$id'
+    | '/combat/$missionId'
+    | '/teacher/manage'
   id:
     | '__root__'
     | '/'
@@ -193,6 +215,8 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/teams'
     | '/activity/$id'
+    | '/combat/$missionId'
+    | '/teacher/manage'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,9 +231,10 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ReportsRoute: typeof ReportsRoute
   StudentRoute: typeof StudentRoute
-  TeacherRoute: typeof TeacherRoute
+  TeacherRoute: typeof TeacherRouteWithChildren
   TeamsRoute: typeof TeamsRoute
   ActivityIdRoute: typeof ActivityIdRoute
+  CombatMissionIdRoute: typeof CombatMissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -305,6 +330,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher/manage': {
+      id: '/teacher/manage'
+      path: '/manage'
+      fullPath: '/teacher/manage'
+      preLoaderRoute: typeof TeacherManageRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/combat/$missionId': {
+      id: '/combat/$missionId'
+      path: '/combat/$missionId'
+      fullPath: '/combat/$missionId'
+      preLoaderRoute: typeof CombatMissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/activity/$id': {
       id: '/activity/$id'
       path: '/activity/$id'
@@ -314,6 +353,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface TeacherRouteChildren {
+  TeacherManageRoute: typeof TeacherManageRoute
+}
+
+const TeacherRouteChildren: TeacherRouteChildren = {
+  TeacherManageRoute: TeacherManageRoute,
+}
+
+const TeacherRouteWithChildren =
+  TeacherRoute._addFileChildren(TeacherRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -327,9 +377,10 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ReportsRoute: ReportsRoute,
   StudentRoute: StudentRoute,
-  TeacherRoute: TeacherRoute,
+  TeacherRoute: TeacherRouteWithChildren,
   TeamsRoute: TeamsRoute,
   ActivityIdRoute: ActivityIdRoute,
+  CombatMissionIdRoute: CombatMissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

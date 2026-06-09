@@ -14,8 +14,9 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 30, // Considera os dados frescos por 30s
       refetchOnWindowFocus: false, // Evita requests ao clicar na janela
       refetchOnReconnect: false, // Evita disparos se a rede oscilar
-      retry: (failureCount, error: any) => {
-        const status = error?.response?.status;
+      retry: (failureCount, error: unknown) => {
+        const err = error as { response?: { status?: number }; status?: number };
+        const status = err?.response?.status || err?.status;
         if (status === 429 || status === 401) return false;
         return failureCount < 2;
       },
