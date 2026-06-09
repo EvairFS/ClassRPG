@@ -180,7 +180,7 @@ export const api = {
 
   me: () => request<AuthUserResponse | null>("/user/me"),
 
-  // Dashboards
+  // Dashboard
   getStudentDashboard: () => request<StudentDashboard>("/dashboard/student"),
   getTeacherDashboard: () => request<TeacherDashboard>("/dashboard/teacher"),
 
@@ -221,8 +221,24 @@ export const api = {
       body: data,
     }),
 
-  // Combat / Mission with questions
-  getMissionCombat: (missionId: string) => request<MissionWithQuestions>(`/missions/${missionId}`),
+  getMissionCombat: async (missionId: string) => {
+    const data = await request<{
+      id: string;
+      title: string;
+      monsterHp: number;
+      xpReward: number;
+      goldReward: number;
+      questions: { id: string; text: string; options: string[]; correctIndex: number }[];
+    }>(`/missions/${missionId}`);
+
+    return {
+      id: data.id,
+      title: data.title,
+      hp: data.monsterHp, // monsterHp → hp
+      xpReward: data.xpReward,
+      questions: data.questions, // já vem camelizado pelo camelize()
+    } as MissionWithQuestions;
+  },
 
   finishMissionCombat: (
     missionId: string,

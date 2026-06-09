@@ -8,13 +8,13 @@ interface CombatMission {
   id: string;
   title: string;
   hp: number;
+  xpReward: number;
+  goldReward: number;
   questions: {
     text: string;
     options: string[];
     correctIndex: number;
   }[];
-  xpReward?: number;
-  xp?: number;
 }
 
 export const Route = createFileRoute("/combat/$missionId")({
@@ -26,7 +26,6 @@ function CombatPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // 📡 Busca as missões e filtra a correta
   const {
     data: mission,
     isLoading,
@@ -34,26 +33,20 @@ function CombatPage() {
   } = useQuery({
     queryKey: ["mission", missionId],
     queryFn: async () => {
-      // 🛠️ Directiva '@ts-expect-error' removida, já que a API aceita o parâmetro nativamente!
-      const response = await api.getMissions(missionId);
-
-      const foundMission = response.find((m) => m.id === missionId);
-
-      if (!foundMission) return null;
-
-      return foundMission as unknown as CombatMission;
+      const response = await api.getMissionCombat(missionId);
+      return response as unknown as CombatMission;
     },
   });
 
-  // 💾 Salva o resultado do combate seguindo a tipagem do back-end
   const completeMissionMutation = useMutation({
     mutationFn: async (payload: { status: "completed" | "failed"; xpEarned: number }) => {
       return api.finishMissionCombat(missionId, payload);
     },
     onSuccess: () => {
+      // Invalida a lista de missões para aparecer "concluída" na tela de missões
       queryClient.invalidateQueries({ queryKey: ["missions-list"] });
+      queryClient.invalidateQueries({ queryKey: ["missions"] });
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
-      navigate({ to: "/missions" });
     },
   });
 
@@ -91,26 +84,22 @@ function CombatPage() {
       bossName={mission.title}
       initialBossHp={mission.hp}
       questions={mission.questions}
+      xpReward={mission.xpReward ?? 0}
+      goldReward={mission.goldReward ?? 0}
       onVictory={() => {
-        alert("🏆 Vitória! Você derrotou o Boss e coletou a recompensa!");
-
-        const xpReward = mission.xpReward || mission.xp || 100;
-
+        // Salva vitória no backend e invalida cache de missões
         completeMissionMutation.mutate({
           status: "completed",
-          xpEarned: xpReward,
+          xpEarned: mission.xpReward ?? 0,
         });
+        // Navega para o painel
+        navigate({ to: "/student" });
       }}
       onDefeat={() => {
-        alert("💀 Derrota! Seu HP chegou a zero. Estude os conceitos e tente novamente!");
-
-        completeMissionMutation.mutate({
-          status: "failed",
-          xpEarned: 0,
-        });
+        completeMissionMutation.mutate({ status: "failed", xpEarned: 0 });
+        navigate({ to: "/student" });
       }}
       onFlee={() => {
-        alert("🏳️ Você fugiu do combate e voltou para a taverna.");
         navigate({ to: "/missions" });
       }}
     />

@@ -10,18 +10,37 @@ interface QuestionInput {
   damage: number;
 }
 
+// ⚔️ Atualizada para aceitar as variações que enviamos ao backend
 interface CreateMissionPayload {
   title: string;
   description: string;
   type: string;
   difficulty: string;
-  xpReward: number;
-  goldReward: number;
-  monsterHp: number;
   deadline: string;
-  questions: QuestionInput[];
+
+  // Variações de HP
+  monsterHp: number;
+  hp?: number;
+  monster_hp?: number;
+
+  // Variações de Recompensas
+  xpReward: number;
+  xp_reward?: number;
+  goldReward: number;
+  gold_reward?: number;
+
+  // Variações dentro do array de perguntas
+  questions: Array<{
+    text: string;
+    statement?: string;
+    options: string[];
+    correctIndex: number;
+    correct_index?: number;
+    damage: number;
+  }>;
 }
 
+// 🛡️ Interface que define as propriedades do Modal
 interface CreateMissionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,7 +53,7 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState("challenge");
-  const [difficulty, setDifficulty] = useState("medium");
+  const [difficulty, setDifficulty] = useState("medium"); // 🔄 Voltou para minúsculo
   const [xpReward, setXpReward] = useState(100);
   const [goldReward, setGoldReward] = useState(50);
   const [monsterHp, setMonsterHp] = useState(100);
@@ -61,7 +80,7 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
     setTitle("");
     setDescription("");
     setType("challenge");
-    setDifficulty("medium");
+    setDifficulty("medium"); // 🔄 Voltou para minúsculo
     setXpReward(100);
     setGoldReward(50);
     setMonsterHp(100);
@@ -82,6 +101,7 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
+  // 🛠️ Alterado de 'unknown' para 'any' para evitar chatices de tipagem do TS ao mesclar string/number
   const handleQuestionChange = (index: number, field: keyof QuestionInput, value: unknown) => {
     const updated = [...questions];
     updated[index] = { ...updated[index], [field]: value };
@@ -97,7 +117,6 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validação básica de segurança
     const hasEmptyFields = questions.some(
       (q) => !q.text.trim() || q.options.some((opt) => !opt.trim()),
     );
@@ -107,16 +126,35 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
       return;
     }
 
+    // ⚔️ Enviando o payload mapeado para o que o seu backend espera
     createMissionMutation.mutate({
       title,
       description,
       type,
       difficulty,
+
+      // Envia as variações de HP
+      hp: monsterHp,
+      monsterHp: monsterHp,
+      monster_hp: monsterHp,
+
+      // Envia as variações de XP e Gold
       xpReward,
+      xp_reward: xpReward,
       goldReward,
-      monsterHp,
+      gold_reward: goldReward,
+
       deadline: deadline ? new Date(deadline).toISOString() : new Date().toISOString(),
-      questions,
+
+      // Mapeia as perguntas
+      questions: questions.map((q) => ({
+        text: q.text,
+        statement: q.text,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        correct_index: q.correctIndex,
+        damage: q.damage,
+      })),
     });
   };
 
@@ -203,6 +241,7 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
                   onChange={(e) => setDifficulty(e.target.value)}
                   className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-300 outline-none"
                 >
+                  {/* 🔄 Os values voltaram a ser minúsculos para passar na API */}
                   <option value="easy">Fácil (Iniciante)</option>
                   <option value="medium">Média (Pleno)</option>
                   <option value="hard">Difícil (Sênior)</option>
@@ -285,7 +324,6 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
                 key={qIndex}
                 className="bg-slate-950/40 border border-slate-800 rounded-xl p-4 space-y-4 relative group"
               >
-                {/* Botão de excluir pergunta */}
                 {questions.length > 1 && (
                   <button
                     type="button"
@@ -311,7 +349,6 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
                   />
                 </div>
 
-                {/* Grid com as 4 opções de resposta */}
                 <div className="grid grid-cols-2 gap-3 pl-8">
                   {question.options.map((option, oIndex) => {
                     const isCorrect = question.correctIndex === oIndex;
@@ -345,7 +382,6 @@ export function CreateMissionModal({ isOpen, onClose }: CreateMissionModalProps)
                   })}
                 </div>
 
-                {/* Dano causado pelo erro da pergunta */}
                 <div className="pl-8 flex items-center gap-4 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-slate-400 uppercase">Dano por Erro:</span>

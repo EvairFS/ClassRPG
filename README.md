@@ -68,9 +68,9 @@ Edite o `.env` com suas credenciais:
 ```env
 PORT=3001
 NODE_ENV=development
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/classrpg
+DATABASE_URL=postgresql://usuario:senha@localhost:3001/classrpg
 JWT_SECRET=sua_chave_secreta
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:3001
 PGSSLMODE=disable
 ```
 
@@ -91,7 +91,7 @@ npm install
 npm run dev
 ```
 
-O frontend estará disponível em `http://localhost:5173`.
+O frontend estará disponível em `http://localhost:3001`.
 
 ### Usuários de teste
 

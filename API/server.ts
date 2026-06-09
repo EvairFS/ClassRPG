@@ -9,7 +9,7 @@ import activityRoutes from "./src/routes/activities.js";
 import achievementRoutes from "./src/routes/achievements.js";
 import missionRoutes from "./src/routes/missions.js";
 import chartRoutes from "./src/routes/charts.js";
-import dashboardRoutes from "./src/routes/dashboards.js";
+import dashboardRoutes from "./src/routes/dashboard.js";
 import notificationRoutes from "./src/routes/notifications.js";
 import rankingRoutes from "./src/routes/ranking.js";
 import studentRoutes from "./src/routes/students.js";

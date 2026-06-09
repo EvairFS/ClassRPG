@@ -18,6 +18,7 @@ import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MissionsRouteImport } from './routes/missions'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as AchievementsRouteImport } from './routes/achievements'
@@ -71,6 +72,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/achievements': typeof AchievementsRoute
   '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/missions': typeof MissionsRoute
   '/notifications': typeof NotificationsRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/achievements': typeof AchievementsRoute
   '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/missions': typeof MissionsRoute
   '/notifications': typeof NotificationsRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/achievements': typeof AchievementsRoute
   '/activities': typeof ActivitiesRoute
   '/admin': typeof AdminRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/missions': typeof MissionsRoute
   '/notifications': typeof NotificationsRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/activities'
     | '/admin'
+    | '/dashboard'
     | '/forgot-password'
     | '/missions'
     | '/notifications'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/activities'
     | '/admin'
+    | '/dashboard'
     | '/forgot-password'
     | '/missions'
     | '/notifications'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/achievements'
     | '/activities'
     | '/admin'
+    | '/dashboard'
     | '/forgot-password'
     | '/missions'
     | '/notifications'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   AchievementsRoute: typeof AchievementsRoute
   ActivitiesRoute: typeof ActivitiesRoute
   AdminRoute: typeof AdminRoute
+  DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   MissionsRoute: typeof MissionsRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -302,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   AchievementsRoute: AchievementsRoute,
   ActivitiesRoute: ActivitiesRoute,
   AdminRoute: AdminRoute,
+  DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   MissionsRoute: MissionsRoute,
   NotificationsRoute: NotificationsRoute,

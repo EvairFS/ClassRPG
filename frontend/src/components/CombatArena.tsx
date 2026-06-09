@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Swords, Backpack, LogOut, ShieldAlert, Heart, Zap } from "lucide-react";
+import { Swords, Backpack, LogOut, Heart, Trophy, Skull, Star, Coins } from "lucide-react";
 
-// Tipagem básica para testes
 interface Question {
   text: string;
   options: string[];
@@ -12,47 +11,60 @@ interface CombatArenaProps {
   bossName: string;
   initialBossHp: number;
   questions: Question[];
+  xpReward: number;
+  goldReward: number;
   onVictory: () => void;
   onDefeat: () => void;
   onFlee: () => void;
 }
 
 type CombatPhase = "MENU" | "ATTACK" | "ITEMS";
+type CombatResult = null | "VICTORY" | "DEFEAT";
 
 export function CombatArena({
   bossName,
   initialBossHp,
-  questions,
+  questions = [],
+  xpReward,
+  goldReward,
   onVictory,
   onDefeat,
   onFlee,
 }: CombatArenaProps) {
-  // Estados do Combate
   const [phase, setPhase] = useState<CombatPhase>("MENU");
   const [bossHp, setBossHp] = useState(initialBossHp);
-  const [playerHp, setPlayerHp] = useState(100); // Vida do aluno
+  const [playerHp, setPlayerHp] = useState(100);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [result, setResult] = useState<CombatResult>(null);
+
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="text-white min-h-screen bg-slate-950 flex items-center justify-center">
+        Carregando perguntas...
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentQuestionIndex];
+  const bossHpPercent = (bossHp / initialBossHp) * 100;
 
-  // 1. Ação: ATACAR (Validar Resposta)
   const handleSelectOption = (index: number) => {
     if (index === currentQuestion.correctIndex) {
-      // Acertou! Causa dano no Boss
       const damage = Math.ceil(initialBossHp / questions.length);
       const newBossHp = Math.max(0, bossHp - damage);
       setBossHp(newBossHp);
-
-      if (newBossHp === 0) return onVictory();
+      if (newBossHp === 0) {
+        setResult("VICTORY");
+        return;
+      }
     } else {
-      // Errou! O Boss contra-ataca o Player
       const newPlayerHp = Math.max(0, playerHp - 25);
       setPlayerHp(newPlayerHp);
-
-      if (newPlayerHp === 0) return onDefeat();
+      if (newPlayerHp === 0) {
+        setResult("DEFEAT");
+        return;
+      }
     }
-
-    // Avança para a próxima pergunta se houver, ou volta pro menu
     if (currentQuestionIndex + 1 < questions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
@@ -60,126 +72,235 @@ export function CombatArena({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-4 select-none">
-      {/* 🏟️ ARENA DE BATALHA (HUD dos Status) */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Status do Aluno / Jogador */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
-          <div className="flex justify-between mb-2">
-            <span className="font-bold text-slate-300 font-mono">HERÓI (VOCÊ)</span>
-            <span className="flex items-center gap-1 text-rose-500 font-bold font-mono">
-              <Heart className="size-4 fill-rose-500" /> {playerHp}/100
-            </span>
-          </div>
-          <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
-            <div
-              className="bg-rose-500 h-full transition-all duration-300"
-              style={{ width: `${playerHp}%` }}
-            />
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col select-none relative">
+      {/* ── OVERLAY: Vitória ── */}
+      {result === "VICTORY" && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-3xl p-8 max-w-sm w-full mx-4 flex flex-col items-center gap-5 shadow-2xl shadow-amber-500/10">
+            <div className="size-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+              <Trophy className="size-10 text-amber-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-mono text-amber-500 uppercase tracking-widest mb-1">
+                Missão Concluída
+              </p>
+              <h2 className="text-2xl font-bold text-white">{bossName} derrotado!</h2>
+            </div>
+            <div className="w-full bg-slate-950 border border-slate-800 rounded-2xl divide-y divide-slate-800">
+              <div className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <Star className="size-4 text-amber-400 fill-amber-400" />
+                  <span className="font-mono text-sm">Experiência</span>
+                </div>
+                <span className="font-mono font-bold text-amber-400">+{xpReward} XP</span>
+              </div>
+              <div className="flex items-center justify-between px-5 py-3">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <Coins className="size-4 text-yellow-400" />
+                  <span className="font-mono text-sm">Ouro</span>
+                </div>
+                <span className="font-mono font-bold text-yellow-400">+{goldReward} 🪙</span>
+              </div>
+            </div>
+            <button
+              onClick={onVictory}
+              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold font-mono uppercase tracking-wider rounded-xl transition text-sm"
+            >
+              Voltar ao Painel →
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Status do Boss / Missão */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
-          <div className="flex justify-between mb-2">
-            <span className="font-bold text-amber-400 font-mono">👾 {bossName}</span>
-            <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
-              <Zap className="size-4 fill-amber-500" /> {bossHp}/{initialBossHp}
+      {/* ── OVERLAY: Derrota ── */}
+      {result === "DEFEAT" && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-rose-500/40 rounded-3xl p-8 max-w-sm w-full mx-4 flex flex-col items-center gap-5 shadow-2xl shadow-rose-500/10">
+            <div className="size-20 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center">
+              <Skull className="size-10 text-rose-400" />
+            </div>
+            <div className="text-center">
+              <p className="text-xs font-mono text-rose-500 uppercase tracking-widest mb-1">
+                Derrota
+              </p>
+              <h2 className="text-2xl font-bold text-white">Seu HP chegou a zero</h2>
+              <p className="text-slate-400 text-sm mt-1">Estude os conceitos e tente novamente!</p>
+            </div>
+            <button
+              onClick={onDefeat}
+              className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold font-mono uppercase tracking-wider rounded-xl transition text-sm"
+            >
+              Voltar ao Painel →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── TOPO: Boss HP ── */}
+      <div className="w-full px-4 pt-4">
+        <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-mono font-bold text-amber-400 text-sm uppercase tracking-wide">
+              👾 {bossName}
+            </span>
+            <span className="font-mono text-sm font-bold text-amber-500">
+              {bossHp}
+              <span className="text-slate-500 font-normal"> / {initialBossHp}</span>
             </span>
           </div>
-          <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+          <div className="w-full bg-slate-950 h-4 rounded-full overflow-hidden border border-slate-800">
             <div
-              className="bg-amber-500 h-full transition-all duration-300"
-              style={{ width: `${(bossHp / initialBossHp) * 100}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${bossHpPercent}%`,
+                background:
+                  bossHpPercent > 50
+                    ? "linear-gradient(90deg, #f59e0b, #fbbf24)"
+                    : bossHpPercent > 25
+                      ? "linear-gradient(90deg, #f97316, #fb923c)"
+                      : "linear-gradient(90deg, #ef4444, #f87171)",
+              }}
             />
           </div>
         </div>
       </div>
 
-      {/* 🎮 CAIXA DE AÇÕES / MENU DE TURNOS */}
-      <div className="w-full max-w-4xl bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 min-h-[200px] flex flex-col justify-center">
-        {/* FASE 1: MENU PRINCIPAL DE ESCOLHAS */}
-        {phase === "MENU" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-            <button
-              onClick={() => setPhase("ATTACK")}
-              className="flex flex-col items-center justify-center p-6 bg-slate-950 border border-slate-800 rounded-xl hover:border-amber-500 hover:bg-slate-900 group transition"
-            >
-              <Swords className="size-8 text-amber-500 group-hover:scale-110 transition mb-2" />
-              <span className="font-bold uppercase tracking-wider font-mono text-sm">Atacar</span>
-            </button>
+      {/* ── MEIO: Sprite ── */}
+      <div className="flex-1 flex items-center justify-center">
+        <span className="text-8xl opacity-20 select-none">👾</span>
+      </div>
 
-            <button
-              onClick={() => setPhase("ITEMS")}
-              className="flex flex-col items-center justify-center p-6 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-500 hover:bg-slate-900 group transition"
-            >
-              <Backpack className="size-8 text-cyan-500 group-hover:scale-110 transition mb-2" />
-              <span className="font-bold uppercase tracking-wider font-mono text-sm">Itens</span>
-            </button>
-
-            <button
-              onClick={onFlee}
-              className="flex flex-col items-center justify-center p-6 bg-slate-950 border border-slate-800 rounded-xl hover:border-rose-500 hover:bg-slate-900 group transition"
-            >
-              <LogOut className="size-8 text-rose-500 group-hover:scale-110 transition mb-2" />
-              <span className="font-bold uppercase tracking-wider font-mono text-sm">Fugir</span>
-            </button>
-          </div>
-        )}
-
-        {/* FASE 2: OPÇÃO ATACAR (RELAÇÃO COM O QUIZ) */}
-        {phase === "ATTACK" && (
-          <div className="space-y-4 w-full">
-            <div className="text-slate-300 font-medium mb-2 text-lg">
-              <span className="text-amber-500 font-mono text-sm block mb-1">
-                PREPARE SEU GOLPE:
+      {/* ── BAIXO: Player HP + Ações ── */}
+      <div className="w-full">
+        <div className="px-4 pb-3">
+          <div className="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Heart className="size-4 fill-rose-500 text-rose-500" />
+                <span className="font-mono text-slate-300 text-sm font-bold uppercase tracking-wide">
+                  Herói (Você)
+                </span>
+              </div>
+              <span className="font-mono text-sm font-bold text-rose-400">
+                {playerHp}
+                <span className="text-slate-500 font-normal"> / 100</span>
               </span>
-              {currentQuestion?.text || "Carregando pergunta..."}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentQuestion?.options.map((option, idx) => (
+            <div className="w-full bg-slate-950 h-4 rounded-full overflow-hidden border border-slate-800">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${playerHp}%`,
+                  background:
+                    playerHp > 50
+                      ? "linear-gradient(90deg, #f43f5e, #fb7185)"
+                      : playerHp > 25
+                        ? "linear-gradient(90deg, #f97316, #fb923c)"
+                        : "linear-gradient(90deg, #dc2626, #ef4444)",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800 bg-slate-900 px-4 py-4">
+          <div className="max-w-2xl mx-auto">
+            {phase === "MENU" && (
+              <div className="grid grid-cols-3 gap-3">
                 <button
-                  key={idx}
-                  onClick={() => handleSelectOption(idx)}
-                  className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left text-sm hover:border-amber-500 hover:bg-slate-950/40 transition font-sans"
+                  onClick={() => setPhase("ATTACK")}
+                  className="flex flex-col items-center justify-center py-5 bg-slate-950 border border-slate-800 rounded-xl hover:border-amber-500 hover:bg-slate-900 group transition"
                 >
-                  <span className="text-amber-500 font-mono mr-2">
-                    {String.fromCharCode(65 + idx)})
+                  <Swords className="size-7 text-amber-500 group-hover:scale-110 transition mb-1" />
+                  <span className="font-bold uppercase tracking-wider font-mono text-xs">
+                    Atacar
                   </span>
-                  {option}
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
+                <button
+                  onClick={() => setPhase("ITEMS")}
+                  className="flex flex-col items-center justify-center py-5 bg-slate-950 border border-slate-800 rounded-xl hover:border-cyan-500 hover:bg-slate-900 group transition"
+                >
+                  <Backpack className="size-7 text-cyan-500 group-hover:scale-110 transition mb-1" />
+                  <span className="font-bold uppercase tracking-wider font-mono text-xs">
+                    Itens
+                  </span>
+                </button>
+                <button
+                  onClick={onFlee}
+                  className="flex flex-col items-center justify-center py-5 bg-slate-950 border border-slate-800 rounded-xl hover:border-rose-500 hover:bg-slate-900 group transition"
+                >
+                  <LogOut className="size-7 text-rose-500 group-hover:scale-110 transition mb-1" />
+                  <span className="font-bold uppercase tracking-wider font-mono text-xs">
+                    Fugir
+                  </span>
+                </button>
+              </div>
+            )}
 
-        {/* FASE 3: OPÇÃO ITENS (MOCHILA INVENTÁRIO) */}
-        {phase === "ITEMS" && (
-          <div className="w-full space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <span className="text-cyan-400 font-mono font-bold text-sm">
-                SUA MOCHILA DE CONSUMÍVEIS
-              </span>
-              <button
-                onClick={() => setPhase("MENU")}
-                className="text-xs text-slate-400 hover:text-white underline"
-              >
-                Voltar
-              </button>
-            </div>
-            {/* Mock de itens para visualização */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-sm opacity-50 cursor-not-allowed">
-                <span>🧪 Elixir de Dica (Elimina 1 alternativa errada)</span>
-                <span className="text-xs bg-slate-900 px-2 py-0.5 rounded text-slate-500">x0</span>
-              </button>
-              <button className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-sm opacity-50 cursor-not-allowed">
-                <span>❤️ Poção de HP (Recupera 25 de Vida)</span>
-                <span className="text-xs bg-slate-900 px-2 py-0.5 rounded text-slate-500">x0</span>
-              </button>
-            </div>
+            {phase === "ATTACK" && (
+              <div className="space-y-3">
+                <div>
+                  <span className="text-amber-500 font-mono text-xs uppercase tracking-widest block mb-1">
+                    Prepare seu golpe:
+                  </span>
+                  <p className="text-slate-200 text-sm font-medium leading-snug">
+                    {currentQuestion?.text || "Carregando pergunta..."}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {currentQuestion?.options.map((option, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSelectOption(idx)}
+                      className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-left text-sm hover:border-amber-500 hover:bg-slate-900 transition"
+                    >
+                      <span className="text-amber-500 font-mono mr-2 text-xs">
+                        {String.fromCharCode(65 + idx)})
+                      </span>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setPhase("MENU")}
+                  className="text-xs text-slate-500 hover:text-slate-300 underline transition"
+                >
+                  ← Voltar
+                </button>
+              </div>
+            )}
+
+            {phase === "ITEMS" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-cyan-400 font-mono font-bold text-xs uppercase tracking-widest">
+                    Mochila
+                  </span>
+                  <button
+                    onClick={() => setPhase("MENU")}
+                    className="text-xs text-slate-500 hover:text-slate-300 underline transition"
+                  >
+                    ← Voltar
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-sm opacity-40 cursor-not-allowed">
+                    <span>🧪 Elixir de Dica</span>
+                    <span className="text-xs bg-slate-900 px-2 py-0.5 rounded text-slate-500">
+                      x0
+                    </span>
+                  </button>
+                  <button className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-sm opacity-40 cursor-not-allowed">
+                    <span>❤️ Poção de HP</span>
+                    <span className="text-xs bg-slate-900 px-2 py-0.5 rounded text-slate-500">
+                      x0
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
