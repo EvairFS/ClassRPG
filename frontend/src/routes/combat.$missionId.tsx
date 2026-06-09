@@ -1,125 +1,118 @@
-import React, { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { CombatArena } from "@/components/CombatArena";
+import { Loader2, ShieldAlert } from "lucide-react";
+
+interface CombatMission {
+  id: string;
+  title: string;
+  hp: number;
+  questions: {
+    text: string;
+    options: string[];
+    correctIndex: number;
+  }[];
+  xpReward?: number;
+  xp?: number;
+}
 
 export const Route = createFileRoute("/combat/$missionId")({
-  component: CombatScreen,
+  component: CombatPage,
 });
 
-function CombatScreen() {
-  // 🌟 Captura o ID da missão vindo da URL de forma 100% tipada pelo TanStack
+function CombatPage() {
   const { missionId } = Route.useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  // Estados simulados para o combate rodar lindamente na UI
-  const [bossHp, setBossHp] = useState(450);
-  const maxBossHp = 500;
-  const [playerHp, setPlayerHp] = useState(100);
-  const [combatLog, setCombatLog] = useState<string[]>([
-    "Você adentrou a masmorra. O Boss está aguardando seu movimento!",
-  ]);
+  // 📡 Busca as missões e filtra a correta
+  const {
+    data: mission,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["mission", missionId],
+    queryFn: async () => {
+      // 🛠️ Directiva '@ts-expect-error' removida, já que a API aceita o parâmetro nativamente!
+      const response = await api.getMissions(missionId);
 
-  const handleAttack = () => {
-    if (bossHp <= 0 || playerHp <= 0) return;
+      const foundMission = response.find((m) => m.id === missionId);
 
-    // Turno do Aluno (Ataque Crítico)
-    const playerDamage = Math.floor(Math.random() * 40) + 20;
-    const newBossHp = Math.max(0, bossHp - playerDamage);
-    setBossHp(newBossHp);
+      if (!foundMission) return null;
 
-    const logs = [`⚔️ Você desferiu um ataque de Refatoração e causou ${playerDamage} de dano!`];
+      return foundMission as unknown as CombatMission;
+    },
+  });
 
-    if (newBossHp <= 0) {
-      logs.push("🎉 VITÓRIA! Você derrotou o Boss e conquistou a masmorra!");
-      setCombatLog((prev) => [...logs, ...prev]);
-      return;
-    }
+  // 💾 Salva o resultado do combate seguindo a tipagem do back-end
+  const completeMissionMutation = useMutation({
+    mutationFn: async (payload: { status: "completed" | "failed"; xpEarned: number }) => {
+      return api.finishMissionCombat(missionId, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["missions-list"] });
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      navigate({ to: "/missions" });
+    },
+  });
 
-    // Turno do Boss (Contra-ataque do Bug)
-    const bossDamage = Math.floor(Math.random() * 15) + 10;
-    const newPlayerHp = Math.max(0, playerHp - bossDamage);
-    setPlayerHp(newPlayerHp);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white gap-3">
+        <Loader2 className="size-10 text-amber-500 animate-spin" />
+        <p className="font-mono text-sm text-slate-400">Entrando na masmorra...</p>
+      </div>
+    );
+  }
 
-    logs.push(`👹 O Boss contra-atacou com um Bug de Compilação e causou ${bossDamage} de dano.`);
-
-    if (newPlayerHp <= 0) {
-      logs.push("💀 Você foi derrotado! Revise seu código e tente novamente.");
-    }
-
-    setCombatLog((prev) => [...logs, ...prev]);
-  };
+  if (error || !mission) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-4 gap-4">
+        <div className="bg-slate-900 border border-rose-900/50 p-6 rounded-2xl max-w-md text-center space-y-3 shadow-xl">
+          <ShieldAlert className="size-12 text-rose-500 mx-auto" />
+          <h3 className="text-lg font-bold text-rose-400 font-mono">ERRO DE CONEXÃO</h3>
+          <p className="text-sm text-slate-400">
+            Não foi possível invocar este Boss. Verifique se a missão ainda está ativa.
+          </p>
+          <button
+            onClick={() => navigate({ to: "/missions" })}
+            className="w-full py-2 bg-slate-950 border border-slate-800 rounded-xl hover:text-rose-400 transition text-sm font-mono"
+          >
+            Voltar para as Missões
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6 bg-slate-950 text-white min-h-screen rounded-xl border border-slate-800">
-      <header className="text-center border-b border-slate-800 pb-4">
-        <span className="text-xs bg-rose-900/50 text-rose-400 border border-rose-700/50 px-2.5 py-1 rounded-full font-mono">
-          MISSÃO ID: {missionId}
-        </span>
-        <h1 className="text-3xl font-extrabold text-amber-400 mt-2">Arena de Combate</h1>
-      </header>
+    <CombatArena
+      bossName={mission.title}
+      initialBossHp={mission.hp}
+      questions={mission.questions}
+      onVictory={() => {
+        alert("🏆 Vitória! Você derrotou o Boss e coletou a recompensa!");
 
-      {/* ÁREA DOS COMBATENTES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-900 p-6 rounded-lg border border-slate-800">
-        {/* PLAYER */}
-        <div className="space-y-2 text-center md:text-left">
-          <div className="text-lg font-bold text-sky-400">🛡️ Seu Herói</div>
-          <div className="w-full bg-slate-950 rounded-full h-5 border border-slate-700 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-emerald-500 to-green-400 h-full transition-all duration-300"
-              style={{ width: `${playerHp}%` }}
-            />
-          </div>
-          <div className="text-sm font-mono text-slate-400">{playerHp} / 100 HP</div>
-        </div>
+        const xpReward = mission.xpReward || mission.xp || 100;
 
-        {/* BOSS */}
-        <div className="space-y-2 text-center md:text-right">
-          <div className="text-lg font-bold text-rose-500">👹 Chefe da Masmorra</div>
-          <div className="w-full bg-slate-950 rounded-full h-5 border border-slate-700 overflow-hidden">
-            <div
-              className="bg-gradient-to-r from-rose-600 to-red-500 h-full transition-all duration-300"
-              style={{ width: `${(bossHp / maxBossHp) * 100}%` }}
-            />
-          </div>
-          <div className="text-sm font-mono text-slate-400">
-            {bossHp} / {maxBossHp} HP
-          </div>
-        </div>
-      </div>
+        completeMissionMutation.mutate({
+          status: "completed",
+          xpEarned: xpReward,
+        });
+      }}
+      onDefeat={() => {
+        alert("💀 Derrota! Seu HP chegou a zero. Estude os conceitos e tente novamente!");
 
-      {/* AÇÕES */}
-      <div className="flex justify-center py-4">
-        <button
-          onClick={handleAttack}
-          disabled={bossHp <= 0 || playerHp <= 0}
-          className="px-8 py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 font-bold text-lg rounded-lg shadow-lg hover:shadow-red-900/30 transition transform hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none"
-        >
-          {bossHp <= 0 ? "🏆 Vitória!" : playerHp <= 0 ? "💀 Derrotado" : "⚔️ Desferir Ataque"}
-        </button>
-      </div>
-
-      {/* HISTÓRICO DE COMBATE */}
-      <section className="bg-slate-900 rounded-lg p-4 border border-slate-800 space-y-2">
-        <h3 className="text-sm font-semibold text-slate-400 border-b border-slate-800 pb-1 font-mono">
-          LOG DE COMBATE
-        </h3>
-        <div className="h-44 overflow-y-auto space-y-1.5 text-sm font-mono pr-2">
-          {combatLog.map((log, index) => (
-            <p
-              key={index}
-              className={`p-2 rounded ${
-                log.includes("⚔️")
-                  ? "bg-sky-950/40 text-sky-300 border-l-2 border-sky-500"
-                  : log.includes("👹")
-                    ? "bg-rose-950/40 text-rose-300 border-l-2 border-rose-500"
-                    : log.includes("🎉")
-                      ? "bg-amber-950/50 text-amber-300 border-l-2 border-amber-500 font-bold"
-                      : "bg-slate-950/60 text-slate-300"
-              }`}
-            >
-              {log}
-            </p>
-          ))}
-        </div>
-      </section>
-    </div>
+        completeMissionMutation.mutate({
+          status: "failed",
+          xpEarned: 0,
+        });
+      }}
+      onFlee={() => {
+        alert("🏳️ Você fugiu do combate e voltou para a taverna.");
+        navigate({ to: "/missions" });
+      }}
+    />
   );
 }

@@ -24,7 +24,7 @@ const LoginPage = () => {
         JSON.stringify({
           token: response.token,
           user: response.user,
-        })
+        }),
       );
       navigate(userType === "student" ? "/student" : "/teacher");
     } catch (err) {

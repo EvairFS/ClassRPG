@@ -72,7 +72,6 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     );
   }
 
-  // 401 → clear session and bounce to login (client-only)
   if (res.status === 401) {
     clearAuth();
     if (typeof window !== "undefined" && window.location.pathname !== "/") {
@@ -96,7 +95,6 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     throw new ApiError(errObj?.error ?? `Erro ${res.status}`, res.status, errObj?.code);
   }
 
-  // Backend wraps every success as { data, meta? }
   const envelope = (payload ?? {}) as { data?: unknown };
   return camelize<T>(envelope.data);
 }
@@ -139,10 +137,13 @@ interface Question {
   correctIndex: number;
 }
 
-interface MissionWithQuestions {
+// ⚔️ Atualizado para conter o HP do Boss e outras infos opcionais de recompensa
+export interface MissionWithQuestions {
   id: string;
   title: string;
-  xpReward: number;
+  hp: number;
+  xpReward?: number;
+  xp?: number;
   questions: Question[];
 }
 
@@ -179,7 +180,7 @@ export const api = {
 
   me: () => request<AuthUserResponse | null>("/user/me"),
 
-  // Dashboards (aggregated)
+  // Dashboards
   getStudentDashboard: () => request<StudentDashboard>("/dashboard/student"),
   getTeacherDashboard: () => request<TeacherDashboard>("/dashboard/teacher"),
 
@@ -196,7 +197,10 @@ export const api = {
     request<unknown>(`/missions/${missionId}/join`, {
       method: "POST",
     }),
-  getMissions: (p0: string) => request<Mission[]>("/missions"),
+
+  // 🛠️ CORRIGIDO: Removido o 'p0' obrigatório que quebrava a chamada do componente
+  getMissions: (missionId: string) => request<Mission[]>("/missions"),
+
   getAchievements: () => request<Achievement[]>("/achievements"),
   getTeams: () => request<Team[]>("/teams"),
   getRanking: () => request<{ rank: number; student: Student }[]>("/ranking"),
@@ -205,7 +209,6 @@ export const api = {
   markNotificationRead: (id: string) =>
     request<NotificationItem>(`/notifications/${id}/read`, { method: "PATCH" }),
 
-  // 🌟 ADICIONE ESTES DOIS MÉTODOS NO FINAL DO OBJETO 'api':
   createMission: (data: unknown) =>
     request<unknown>("/missions", {
       method: "POST",
