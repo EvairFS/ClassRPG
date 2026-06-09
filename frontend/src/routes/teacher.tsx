@@ -41,9 +41,9 @@ function TeacherDashboard() {
   });
 
   const { data: missions } = useQuery({
-    queryKey: ["missions"],
-    queryFn: api.getMissions,
-    enabled: hydrated && isAuthenticated,
+    queryKey: ["missions", user?.id], // Boa prática: inclua o ID na chave para o cache não misturar dados
+    queryFn: () => api.getMissions(user?.id ?? ""),
+    enabled: hydrated && isAuthenticated && !!user?.id, // Só roda se tiver o ID do user em mãos
   });
 
   if (!hydrated || isLoading) {

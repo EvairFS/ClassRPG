@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth"; // 🛠️ Importado seu hook de autenticação
 import { Plus, Trash2, X, Loader2 } from "lucide-react";
 
 interface QuestionForm {
@@ -16,7 +17,17 @@ interface CreateActivityModalProps {
 
 export function CreateActivityModal({ isOpen, onClose }: CreateActivityModalProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // 🛠️ Pegando o usuário logado para obter o UUID real
+
+  // 📝 Estados alinhados com as colunas obrigatórias do seu banco de dados
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [subject, setSubject] = useState("");
+  const [difficulty, setDifficulty] = useState("Medium");
+  const [xpReward, setXpReward] = useState("100");
+  const [deadline, setDeadline] = useState("");
+  const [instructions, setInstructions] = useState("");
+
   const [questions, setQuestions] = useState<QuestionForm[]>([
     { text: "", options: ["", "", "", ""], correctIndex: 0 },
   ]);
@@ -26,11 +37,19 @@ export function CreateActivityModal({ isOpen, onClose }: CreateActivityModalProp
       return api.createActivity(data);
     },
     onSuccess: () => {
-      // Invalida a lista de atividades para atualizar o select do outro modal automaticamente
       queryClient.invalidateQueries({ queryKey: ["activities-list"] });
-      onClose();
 
-      // ... (seus estados de limpar formulário se houverem, ex: setTitle(""))
+      // Limpa o formulário após salvar
+      setTitle("");
+      setDescription("");
+      setSubject("");
+      setDifficulty("Médio");
+      setXpReward("100");
+      setDeadline("");
+      setInstructions("");
+      setQuestions([{ text: "", options: ["", "", "", ""], correctIndex: 0 }]);
+
+      onClose();
     },
   });
 
@@ -64,8 +83,22 @@ export function CreateActivityModal({ isOpen, onClose }: CreateActivityModalProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || questions.some((q) => !q.text.trim())) return;
-    createActivityMutation.mutate({ title, questions });
+    if (!title.trim() || !subject.trim() || questions.some((q) => !q.text.trim())) return;
+
+    // 🛠️ Montando o payload completo exigido pelo seu Back-end e Banco de Dados
+    const payload = {
+      title,
+      description,
+      subject,
+      difficulty,
+      xpReward: Number(xpReward),
+      deadline: deadline ? new Date(deadline).toISOString() : new Date().toISOString(),
+      instructions,
+      teacher: user?.id, // 🎯 Envia o UUID real do professor logado (Adeus erro "Professor"!)
+      questions,
+    };
+
+    createActivityMutation.mutate(payload);
   };
 
   return (
@@ -81,9 +114,10 @@ export function CreateActivityModal({ isOpen, onClose }: CreateActivityModalProp
         </header>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1">
+          {/* Título */}
           <div className="space-y-2">
             <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
-              Título da Atividade
+              Título da Atividade *
             </label>
             <input
               type="text"
@@ -95,6 +129,94 @@ export function CreateActivityModal({ isOpen, onClose }: CreateActivityModalProp
             />
           </div>
 
+          {/* Matéria e Recompensa de XP */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                Matéria / Disciplina *
+              </label>
+              <input
+                type="text"
+                required
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Ex: Engenharia de Software"
+                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                Recompensa de XP *
+              </label>
+              <input
+                type="number"
+                required
+                value={xpReward}
+                onChange={(e) => setXpReward(e.target.value)}
+                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition"
+              />
+            </div>
+          </div>
+
+          {/* Dificuldade e Prazo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                Dificuldade *
+              </label>
+              <select
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value)}
+                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition"
+              >
+                <option value="Fácil">Fácil</option>
+                <option value="Médio">Médio</option>
+                <option value="Difícil">Difícil</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                Prazo de Entrega (Deadline) *
+              </label>
+              <input
+                type="datetime-local"
+                required
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition text-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* Descrição Básica */}
+          <div className="space-y-2">
+            <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+              Descrição curta
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Uma breve introdução sobre o questionário..."
+              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition"
+            />
+          </div>
+
+          {/* Instruções */}
+          <div className="space-y-2">
+            <label className="text-xs font-mono uppercase tracking-wider text-slate-400">
+              Instruções de Combate
+            </label>
+            <textarea
+              value={instructions}
+              onChange={(e) => setInstructions(e.target.value)}
+              placeholder="Instruções para o aluno responder o questionário..."
+              rows={2}
+              className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm focus:border-amber-500 outline-none transition resize-none"
+            />
+          </div>
+
+          {/* Seção Dinâmica de Perguntas */}
           <div className="border-t border-slate-800/60 pt-4 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-300 font-mono uppercase">

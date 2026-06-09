@@ -39,12 +39,15 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
 router.post("/", validate(createActivitySchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description, subject, difficulty, xpReward, deadline, instructions, teacher } = req.body;
-    const newId = `ac${Date.now()}`;
+    
+    // 🛠️ CORREÇÃO: Mudamos 'teacher' para 'teacher_id' no SQL.
+    // 💡 OBS: Removi o 'newId' para deixar o Postgres gerar o UUID padrão automaticamente.
     const rows = await q(
-      `INSERT INTO activities (id, title, description, subject, difficulty, xp_reward, deadline, status, instructions, teacher)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending',$8,$9) RETURNING *`,
-      [newId, title, description, subject, difficulty, xpReward, deadline, instructions, teacher]
+      `INSERT INTO activities (title, description, subject, difficulty, xp_reward, deadline, status, instructions, teacher_id)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8) RETURNING *`,
+      [title, description, subject, difficulty, xpReward, deadline, instructions, teacher]
     );
+    
     created(res, rows[0]);
   } catch (err) {
     next(err);
