@@ -8,6 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamsRouteImport } from './routes/teams'
 import { Route as TeacherRouteImport } from './routes/teacher'
@@ -27,6 +29,17 @@ import { Route as TeacherManageRouteImport } from './routes/teacher.manage'
 import { Route as CombatMissionIdRouteImport } from './routes/combat.$missionId'
 import { Route as ActivityIdRouteImport } from './routes/activity.$id'
 
+const CharacterCreationLazyRouteImport = createFileRoute(
+  '/character-creation',
+)()
+
+const CharacterCreationLazyRoute = CharacterCreationLazyRouteImport.update({
+  id: '/character-creation',
+  path: '/character-creation',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/character-creation.lazy').then((d) => d.Route),
+)
 const TeamsRoute = TeamsRouteImport.update({
   id: '/teams',
   path: '/teams',
@@ -128,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
+  '/character-creation': typeof CharacterCreationLazyRoute
   '/activity/$id': typeof ActivityIdRoute
   '/combat/$missionId': typeof CombatMissionIdRoute
   '/teacher/manage': typeof TeacherManageRoute
@@ -147,6 +161,7 @@ export interface FileRoutesByTo {
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
+  '/character-creation': typeof CharacterCreationLazyRoute
   '/activity/$id': typeof ActivityIdRoute
   '/combat/$missionId': typeof CombatMissionIdRoute
   '/teacher/manage': typeof TeacherManageRoute
@@ -167,6 +182,7 @@ export interface FileRoutesById {
   '/student': typeof StudentRoute
   '/teacher': typeof TeacherRouteWithChildren
   '/teams': typeof TeamsRoute
+  '/character-creation': typeof CharacterCreationLazyRoute
   '/activity/$id': typeof ActivityIdRoute
   '/combat/$missionId': typeof CombatMissionIdRoute
   '/teacher/manage': typeof TeacherManageRoute
@@ -188,6 +204,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/teams'
+    | '/character-creation'
     | '/activity/$id'
     | '/combat/$missionId'
     | '/teacher/manage'
@@ -207,6 +224,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/teams'
+    | '/character-creation'
     | '/activity/$id'
     | '/combat/$missionId'
     | '/teacher/manage'
@@ -226,6 +244,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/teacher'
     | '/teams'
+    | '/character-creation'
     | '/activity/$id'
     | '/combat/$missionId'
     | '/teacher/manage'
@@ -246,12 +265,20 @@ export interface RootRouteChildren {
   StudentRoute: typeof StudentRoute
   TeacherRoute: typeof TeacherRouteWithChildren
   TeamsRoute: typeof TeamsRoute
+  CharacterCreationLazyRoute: typeof CharacterCreationLazyRoute
   ActivityIdRoute: typeof ActivityIdRoute
   CombatMissionIdRoute: typeof CombatMissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/character-creation': {
+      id: '/character-creation'
+      path: '/character-creation'
+      fullPath: '/character-creation'
+      preLoaderRoute: typeof CharacterCreationLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teams': {
       id: '/teams'
       path: '/teams'
@@ -400,6 +427,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRoute: StudentRoute,
   TeacherRoute: TeacherRouteWithChildren,
   TeamsRoute: TeamsRoute,
+  CharacterCreationLazyRoute: CharacterCreationLazyRoute,
   ActivityIdRoute: ActivityIdRoute,
   CombatMissionIdRoute: CombatMissionIdRoute,
 }

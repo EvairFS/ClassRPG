@@ -7,7 +7,7 @@ interface StatsCardProps {
   value: string | number;
   delta?: number;
   icon: LucideIcon;
-  tint?: "primary" | "secondary" | "accent" | "muted";
+  tint?: "primary" | "secondary" | "accent" | "muted" | "gold"; // ✨ 1. Adicionado o tipo "gold"
   className?: string;
 }
 
@@ -16,19 +16,39 @@ const TINTS: Record<NonNullable<StatsCardProps["tint"]>, string> = {
   secondary: "from-secondary/25 to-secondary/0 text-secondary",
   accent: "from-accent/30 to-accent/0 text-accent",
   muted: "from-white/10 to-white/0 text-foreground",
+  gold: "from-amber-500/30 to-amber-500/0 text-amber-400", // ✨ 2. Efeito de brilho dourado e ícone âmbar
 };
 
-export function StatsCard({ label, value, delta, icon: Icon, tint = "primary", className }: StatsCardProps) {
+export function StatsCard({
+  label,
+  value,
+  delta,
+  icon: Icon,
+  tint = "primary",
+  className,
+}: StatsCardProps) {
   const positive = (delta ?? 0) >= 0;
   return (
     <div className={cn("glass relative overflow-hidden rounded-2xl p-5", className)}>
-      <div className={cn("pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-gradient-to-br blur-2xl", TINTS[tint])} />
+      <div
+        className={cn(
+          "pointer-events-none absolute -right-10 -top-10 size-32 rounded-full bg-gradient-to-br blur-2xl",
+          TINTS[tint],
+        )}
+      />
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {label}
+          </p>
           <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">{value}</p>
           {delta !== undefined && (
-            <p className={cn("mt-1 inline-flex items-center gap-1 text-xs font-medium", positive ? "text-emerald-300" : "text-rose-300")}>
+            <p
+              className={cn(
+                "mt-1 inline-flex items-center gap-1 text-xs font-medium",
+                positive ? "text-emerald-300" : "text-rose-300",
+              )}
+            >
               {positive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
               {positive ? "+" : ""}
               {delta}% vs. semana

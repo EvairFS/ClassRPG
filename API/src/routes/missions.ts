@@ -60,6 +60,7 @@ router.post("/", async (req: CustomRequest, res: Response, next: NextFunction) =
 // ── POST /api/missions/answer (ESTUDANTE: Responder com transação e trava de segurança) ──
 router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunction) => {
   let inTransaction = false;
+  let missionCompleted = false; // Flag para avisar o frontend se o monstro morreu
 
   try {
     const { question_id, student_answer_index } = req.body;
@@ -94,21 +95,59 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
     );
 
     if (isCorrect) {
+      // 1. Atualiza o progresso do dano na tabela do aluno
       await q(
         `UPDATE student_missions 
-         SET progress = progress + $1 
+         SET progress = progress + $1, updated_at = NOW() 
          WHERE student_id = $2 AND mission_id = $3`,
         [question.damage, studentId, question.mission_id]
       );
+
+      // 2. Busca o estado atualizado e as recompensas configuradas na missão
+      const missionState = await qOne(
+        `SELECT sm.progress, sm.status, m.monster_hp, m.xp_reward, m.gold_reward 
+         FROM student_missions sm
+         JOIN missions m ON sm.mission_id = m.id
+         WHERE sm.student_id = $1 AND sm.mission_id = $2`,
+        [studentId, question.mission_id]
+      );
+
+      // 3. Checa se o monstro morreu (progress >= monster_hp) E se a missão ainda estava 'IN_PROGRESS'
+      if (missionState && missionState.progress >= missionState.monster_hp && missionState.status === 'IN_PROGRESS') {
+        
+        // Altera o status para impedir re-recompensas futuras
+        await q(
+          `UPDATE student_missions 
+           SET status = 'COMPLETED', updated_at = NOW() 
+           WHERE student_id = $1 AND mission_id = $2`,
+          [studentId, question.mission_id]
+        );
+
+        // ADICIONA XP, OURO E CONTADOR DE MISSÕES NA TABELA STUDENTS
+        await q(
+          `UPDATE students 
+           SET xp = xp + $1, 
+               gold = gold + $2, 
+               missions_completed = missions_completed + 1 
+           WHERE id = $3`,
+          [Number(missionState.xp_reward), Number(missionState.gold_reward), studentId]
+        );
+
+        missionCompleted = true;
+      }
     }
 
     await q("COMMIT");
     inTransaction = false;
 
+    // Retorna a resposta contendo se a missão foi finalizada
     success(res, {
       correct: isCorrect,
       damage_dealt: isCorrect ? question.damage : 0,
-      message: isCorrect ? "Acertou! O HP do monstro diminuiu." : "Resposta incorreta!"
+      mission_completed: missionCompleted,
+      message: missionCompleted 
+        ? "Vitória! Você derrotou o monstro e suas recompensas de XP e Ouro foram creditadas!" 
+        : (isCorrect ? "Acertou! O HP do monstro diminuiu." : "Resposta incorreta!")
     });
   } catch (err) {
     if (inTransaction) {
@@ -270,6 +309,88 @@ router.delete("/:id", async (req: CustomRequest, res: Response, next: NextFuncti
     }
 
     success(res, { message: "Missão removida com sucesso!" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /api/student/profile (Buscar dados reais do estudante logado) ──
+router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const studentId = req.user?.id;
+
+    if (!studentId) {
+      throw new BadRequestError("Estudante não identificado.");
+    }
+
+    // Busca os dados atualizados direto da tabela students
+    const student = await qOne(
+      "SELECT id, classroom, xp, level, patent, streak, gold FROM students WHERE id = $1",
+      [studentId]
+    );
+
+    if (!student) {
+      throw new NotFoundError("Estudante não encontrado no banco.");
+    }
+
+    success(res, student);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/missions/:id/finish (ESTUDANTE: Concluir missão vinda do front-end) ──
+router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const missionId = req.params.id;
+    const studentId = req.user?.id; // Pega o ID do aluno autenticado pelo token
+
+    if (!studentId) {
+      throw new BadRequestError("Estudante não autenticado.");
+    }
+
+    // 1. Busca os prêmios da missão (XP e Ouro) e o HP total do monstro
+    const mission = await qOne(
+      "SELECT xp_reward, gold_reward, monster_hp FROM missions WHERE id = $1", 
+      [missionId]
+    );
+    if (!mission) {
+      throw new NotFoundError("Missão não encontrada.");
+    }
+
+    // 2. Trava de segurança: evita que o aluno clique várias vezes e ganhe ouro infinito
+    const studentMission = await qOne(
+      "SELECT status FROM student_missions WHERE student_id = $1 AND mission_id = $2",
+      [studentId, missionId]
+    );
+
+    if (studentMission && studentMission.status === "COMPLETED") {
+      throw new BadRequestError("Você já concluiu esta missão!");
+    }
+
+    // 3. Atualiza o status da missão do aluno para COMPLETED e iguala o progresso ao HP do monstro
+    await q(
+      `UPDATE student_missions 
+       SET status = 'COMPLETED', progress = $1, updated_at = NOW() 
+       WHERE student_id = $2 AND mission_id = $3`,
+      [Number(mission.monster_hp), studentId, missionId]
+    );
+
+    // 4. SOMA O OURO, XP E INCREMENTA AS MISSÕES CONCLUÍDAS NA TABELA STUDENTS
+    await q(
+      `UPDATE students 
+       SET xp = xp + $1, 
+           gold = gold + $2, 
+           missions_completed = missions_completed + 1 
+       WHERE id = $3`,
+      [Number(mission.xp_reward), Number(mission.gold_reward), studentId]
+    );
+
+    // Retorna o sucesso para o front-end
+    success(res, { 
+      message: "Vitória registrada com sucesso! Recompensas creditadas no banco de dados." 
+    });
+
   } catch (err) {
     next(err);
   }

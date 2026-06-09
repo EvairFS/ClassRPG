@@ -1,10 +1,10 @@
 import type { Student } from "@/types";
 import { XPBar } from "./XPBar";
 import { PatentBadge } from "./PatentBadge";
-import { Flame, Sparkles, Trophy } from "lucide-react";
+import { Flame, Sparkles, Coins } from "lucide-react"; // 🪙 Trocado Trophy por Coins
 
 export function ProfileHeader({ student }: { student: Student }) {
-  // 🛡️ Tratamento seguro e totalmente alinhado com o TypeScript do projeto
+  // Tratamento seguro e totalmente alinhado com o TypeScript do projeto
   const nomeCompleto = student?.name || "Jogador";
   const primeiroNome = nomeCompleto.trim().split(" ")[0];
 
@@ -15,6 +15,9 @@ export function ProfileHeader({ student }: { student: Student }) {
   const sequencia = student?.streak ?? 0;
   const missoes = student?.missionsCompleted ?? 0;
   const avatarEstudante = student?.avatar || "🎓";
+
+  // 🪙 Puxando o ouro real vindo do banco/prop do herói
+  const ouro = (student as unknown)?.gold ?? 0;
 
   return (
     <div className="glass-strong relative overflow-hidden rounded-3xl p-6 md:p-8">
@@ -41,8 +44,11 @@ export function ProfileHeader({ student }: { student: Student }) {
             <XPBar xp={xpTotal} size="lg" />
           </div>
         </div>
+
+        {/* ── GRID DE BADGES SUPERIOR DIREITO ── */}
         <div className="grid grid-cols-3 gap-3 md:gap-4">
-          <Mini label="XP total" value={xpTotal} icon={Trophy} tint="text-accent" />
+          {/* 🪙 Trocado o XP repetido por Ouro com tom amarelo dourado */}
+          <Mini label="Ouro" value={ouro} icon={Coins} tint="text-yellow-400" />
           <Mini label="Sequência" value={`${sequencia}d`} icon={Flame} tint="text-rose-300" />
           <Mini label="Missões" value={missoes} icon={Sparkles} tint="text-primary" />
         </div>
