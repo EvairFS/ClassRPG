@@ -61,6 +61,7 @@ export interface Mission {
 }
 
 export interface ActivityItem {
+  completed: any;
   id: string;
   title: string;
   description: string;

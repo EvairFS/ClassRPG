@@ -133,7 +133,7 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 animate-fade-up stagger-1">
           <StatsCard
             label="Ouro Acumulado"
-            value={`🪙 ${(student as any).gold ?? 0}`}
+            value={`🪙 ${(student as unknown).gold ?? 0}`}
             icon={Coins}
             tint="gold"
           />
