@@ -3,18 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
   Bell,
-  GraduationCap,
   LayoutDashboard,
   LogOut,
   Search,
-  Shield,
   Sparkles,
   Swords,
   Target,
   Trophy,
   Users,
 } from "lucide-react";
-import { ReactNode, useEffect } from "react"; 
+import { ReactNode, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,8 +59,6 @@ export function AppShell({ role, title, children }: AppShellProps) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user, isAuthenticated, hydrated, logout } = useAuth();
 
-  // 💡 RESOLUÇÃO DO BUG: Descobre o cargo real. Se o usuário estiver logado,
-  // usa o cargo dele (user.role). Se não (carregando), usa o da rota.
   const currentRole = user?.role || role;
   const items = NAV[currentRole];
 
@@ -73,20 +69,20 @@ export function AppShell({ role, title, children }: AppShellProps) {
   }, [hydrated, isAuthenticated, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); 
-    logout();                         
-    navigate({ to: "/", replace: true }); 
+    localStorage.removeItem("token");
+    logout();
+    navigate({ to: "/", replace: true });
   };
 
-  // 💡 Ajustado para usar currentRole
-  const initials = (user?.name ?? "")
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() ||
-    (currentRole === "teacher" ? "PR" : currentRole === "admin" ? "AD" : "AL");
+  const initials =
+    (user?.name ?? "")
+      .split(" ")
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || (currentRole === "teacher" ? "PR" : currentRole === "admin" ? "AD" : "AL");
 
+  // 🔔 Busca de notificações
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: api.getNotifications,
@@ -94,6 +90,14 @@ export function AppShell({ role, title, children }: AppShellProps) {
     staleTime: 30_000,
   });
   const unread = (notifications ?? []).filter((n) => !n.read).length;
+
+  // 🎯 DADOS DINÂMICOS: Busca os dados do painel do aluno apenas se o usuário for estudante
+  const { data: dashboardData } = useQuery({
+    queryKey: ["studentDashboard"],
+    queryFn: () => api.getStudentDashboard(), // Alinhado com a rota do seu backend
+    enabled: isAuthenticated && currentRole === "student",
+    staleTime: 30_000,
+  });
 
   if (hydrated && !isAuthenticated) {
     return null;
@@ -109,7 +113,6 @@ export function AppShell({ role, title, children }: AppShellProps) {
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">ClassRPG</p>
-            {/* 💡 Ajustado para usar currentRole */}
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
               {ROLE_LABEL[currentRole]}
             </p>
@@ -129,23 +132,33 @@ export function AppShell({ role, title, children }: AppShellProps) {
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
                 )}
               >
-                <item.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                <item.icon
+                  className={cn(
+                    "size-4",
+                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* 💡 MELHORIA VISUAL: Só exibe o card de missões/desafios se o usuário real for um Aluno */}
-        {currentRole === "student" && (
+        {/* 🎯 PRÓXIMO DESAFIO REAL E DINÂMICO */}
+        {currentRole === "student" && dashboardData?.proximoDesafio && (
           <div className="m-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Próximo desafio
             </p>
-            <p className="mt-1 text-sm font-medium text-foreground">Boss bimestral</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Em 11 dias · +900 XP</p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {dashboardData.proximoDesafio.titulo}
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {dashboardData.proximoDesafio.diasRestantes} · +
+              {dashboardData.proximoDesafio.xpReward} XP
+            </p>
             <Link
-              to="/student"
+              to="/missions"
               className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-primary to-secondary px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
             >
               Preparar-se
@@ -162,13 +175,14 @@ export function AppShell({ role, title, children }: AppShellProps) {
               <p className="truncate text-xs font-medium text-foreground">
                 {hydrated ? (user?.name ?? "Visitante") : "…"}
               </p>
-              {/* 💡 Ajustado para usar currentRole no rodapé do usuário */}
-              <p className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[currentRole]}</p>
+              <p className="truncate text-[10px] text-muted-foreground">
+                {ROLE_LABEL[currentRole]}
+              </p>
             </div>
           </div>
           <button
             type="button"
-            onClick={handleLogout} 
+            onClick={handleLogout}
             title="Sair"
             className="text-muted-foreground transition hover:text-foreground"
           >
@@ -177,7 +191,7 @@ export function AppShell({ role, title, children }: AppShellProps) {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main Content */}
       <div className="flex min-h-screen flex-1 flex-col md:pl-64">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-white/5 bg-background/70 px-4 backdrop-blur-xl md:px-8">
           <h1 className="text-base font-semibold text-foreground md:text-lg">{title}</h1>
@@ -188,9 +202,14 @@ export function AppShell({ role, title, children }: AppShellProps) {
                 placeholder="Buscar missões, alunos..."
                 className="w-56 bg-transparent outline-none placeholder:text-muted-foreground/60"
               />
-              <kbd className="rounded border border-white/10 px-1 text-[10px] text-muted-foreground/70">⌘K</kbd>
+              <kbd className="rounded border border-white/10 px-1 text-[10px] text-muted-foreground/70">
+                ⌘K
+              </kbd>
             </div>
-            <Link to="/notifications" className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground">
+            <Link
+              to="/notifications"
+              className="relative inline-flex size-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-muted-foreground transition hover:text-foreground"
+            >
               <Bell className="size-4" />
               {unread > 0 && (
                 <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-accent text-[9px] font-bold text-accent-foreground">
