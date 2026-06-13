@@ -7,7 +7,18 @@ import { Button } from "@/components/ui/button";
 import { api, ApiError } from "@/lib/api";
 import { ErrorState, LoadingState } from "@/components/common/QueryState";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, CheckCircle2, Clock, FileText, Loader2, MessageSquare, Paperclip, Sparkles, Trophy, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Loader2,
+  MessageSquare,
+  Paperclip,
+  Sparkles,
+  Trophy,
+  User,
+} from "lucide-react";
 
 export const Route = createFileRoute("/activity/$id")({
   head: () => ({
@@ -23,7 +34,13 @@ function ActivityDetail() {
   const { id } = Route.useParams();
   const { user, hydrated, isAuthenticated } = useAuth();
   const qc = useQueryClient();
-  const { data: activity, isLoading, isError, error, refetch } = useQuery({
+  const {
+    data: activity,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["activity", id],
     queryFn: () => api.getActivity(id),
     enabled: hydrated && isAuthenticated,
@@ -56,8 +73,12 @@ function ActivityDetail() {
         {isNotFound ? (
           <div className="glass rounded-3xl p-10 text-center">
             <p className="text-xs uppercase tracking-widest text-muted-foreground">404</p>
-            <h2 className="mt-2 text-xl font-semibold text-foreground">Atividade "{id}" não encontrada</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Ela pode ter expirado ou sido removida.</p>
+            <h2 className="mt-2 text-xl font-semibold text-foreground">
+              Atividade "{id}" não encontrada
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ela pode ter expirado ou sido removida.
+            </p>
             <Link
               to="/activities"
               className="mt-5 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-secondary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
@@ -84,7 +105,10 @@ function ActivityDetail() {
   return (
     <AppShell role="student" title={activity.title}>
       <div className="space-y-6">
-        <Link to="/activities" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/activities"
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="size-3.5" />
           Voltar para atividades
         </Link>
@@ -109,7 +133,9 @@ function ActivityDetail() {
             {activity.instructions && (
               <div className="mt-6">
                 <h2 className="mb-2 text-sm font-semibold text-foreground">Instruções</h2>
-                <p className="text-sm leading-relaxed text-muted-foreground">{activity.instructions}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {activity.instructions}
+                </p>
               </div>
             )}
 
@@ -191,7 +217,8 @@ function ActivityDetail() {
                   <div className="mt-3 flex items-start gap-2">
                     <MessageSquare className="mt-0.5 size-4 text-secondary" />
                     <p className="text-sm leading-relaxed text-muted-foreground">
-                      <span className="font-medium text-foreground">{activity.teacher}:</span> {activity.feedback}
+                      <span className="font-medium text-foreground">{activity.teacher}:</span>{" "}
+                      {activity.feedback}
                     </p>
                   </div>
                 )}
@@ -203,21 +230,25 @@ function ActivityDetail() {
             <div className="glass rounded-2xl p-5">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Recompensa</p>
               <p className="mt-1 inline-flex items-center gap-1 text-2xl font-bold text-accent">
-                <Trophy className="size-5" />
-                +{activity.xpReward} XP
+                <Trophy className="size-5" />+{activity.xpReward} XP
               </p>
             </div>
             <div className="glass rounded-2xl p-5">
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Prazo</p>
               <p className="mt-1 inline-flex items-center gap-2 text-base font-semibold text-foreground">
                 <Clock className="size-4 text-secondary" />
-                {new Date(activity.deadline).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}
+                {new Date(activity.deadline).toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                })}
               </p>
             </div>
             {isGraded && (
               <div className="glass rounded-2xl p-5">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">Nota</p>
-                <p className="mt-1 text-3xl font-bold text-emerald-300 tabular-nums">{activity.grade}</p>
+                <p className="mt-1 text-3xl font-bold text-emerald-300 tabular-nums">
+                  {activity.grade}
+                </p>
               </div>
             )}
           </aside>

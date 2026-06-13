@@ -19,8 +19,15 @@ import battleRoutes from './src/routes/battle.routes.js';
 
 const app = express();
 
-// ── Middlewares Globais ──
-app.use(cors());
+// ── Middlewares Globais Configurados ──
+app.use(
+  cors({
+    origin: "https://classrpg.classrpg.workers.dev", // Permite apenas o seu front da Cloudflare
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // Libera o envio de cookies/tokens se houver
+  })
+);
 app.use(express.json());
 
 // ── Rota de Healthcheck (Status da API) ──

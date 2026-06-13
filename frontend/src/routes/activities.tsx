@@ -30,7 +30,7 @@ const STATUSES: { value: ActivityItem["status"] | "all"; label: string }[] = [
 function ActivitiesPage() {
   const [status, setStatus] = useState<ActivityItem["status"] | "all">("all");
   const [subject, setSubject] = useState<string>("all");
-  
+
   const { user, hydrated, isAuthenticated } = useAuth();
   const currentRole = user?.role || "student";
 
@@ -41,7 +41,7 @@ function ActivitiesPage() {
     queryFn: api.getActivities,
     enabled: hydrated && isAuthenticated,
   });
-  
+
   const activities = data ?? [];
 
   const subjects = useMemo(
@@ -50,7 +50,8 @@ function ActivitiesPage() {
   );
 
   const list = activities.filter(
-    (a) => (status === "all" || a.status === status) && (subject === "all" || a.subject === subject),
+    (a) =>
+      (status === "all" || a.status === status) && (subject === "all" || a.subject === subject),
   );
 
   if (!hydrated || isLoading) {
@@ -74,11 +75,11 @@ function ActivitiesPage() {
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              {currentRole === "student" 
-                ? "Suas batalhas pendentes" 
-                : currentRole === "teacher" 
-                ? "Gerenciamento de Atividades" 
-                : "Painel de Controle de Atividades"}
+              {currentRole === "student"
+                ? "Suas batalhas pendentes"
+                : currentRole === "teacher"
+                  ? "Gerenciamento de Atividades"
+                  : "Painel de Controle de Atividades"}
             </h2>
             <p className="text-sm text-muted-foreground">{list.length} atividade(s) encontradas</p>
           </div>
@@ -128,17 +129,21 @@ function ActivitiesPage() {
                     </span>
                     <DifficultyBadge value={a.difficulty} />
                   </div>
-                  <h3 className="mt-2 truncate text-base font-semibold text-foreground">{a.title}</h3>
+                  <h3 className="mt-2 truncate text-base font-semibold text-foreground">
+                    {a.title}
+                  </h3>
                   <p className="mt-0.5 truncate text-xs text-muted-foreground">{a.description}</p>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-4">
                   <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                    <Trophy className="size-3.5" />
-                    +{a.xpReward} XP
+                    <Trophy className="size-3.5" />+{a.xpReward} XP
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="size-3.5" />
-                    {new Date(a.deadline).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                    {new Date(a.deadline).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
                   </span>
                   <StatusBadge status={a.status} grade={a.grade} />
                   <ChevronRight className="size-4 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />

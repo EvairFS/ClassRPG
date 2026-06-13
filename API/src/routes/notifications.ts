@@ -8,6 +8,7 @@ const router = Router();
 
 router.use(requireAuth);
 
+
 // ── PATCH /api/notifications/:id/read ──
 router.patch("/:id/read", async (req, res, next) => {
   try {

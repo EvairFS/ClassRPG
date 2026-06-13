@@ -9,6 +9,18 @@ import {
 } from "@tanstack/react-router";
 import appCss from "../styles.css?url";
 
+// 💡 1. Definimos a estrutura exata do contexto que o App.tsx vai injetar
+interface RouterContext {
+  queryClient: QueryClient;
+  auth: {
+    user: any;
+    token: string | null;
+    isAuthenticated: boolean;
+    hydrated: boolean;
+    logout: () => void;
+  };
+}
+
 function NotFoundComponent() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
@@ -84,7 +96,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+// 💡 2. Passamos a nossa interface para o criador de contexto da rota raiz
+export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },

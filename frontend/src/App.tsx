@@ -1,51 +1,61 @@
+// src/App.tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/useAuth"; // 💡 Importe o seu hook reativo
 
-// Importa a árvore de rotas gerada pelo TanStack Router
 import { routeTree } from "./routeTree.gen";
 
-// 🛡️ Configuração do QueryClient protegida contra loops e HTTP 429
+// 🛡️ Configuração protetora do QueryClient contra loops
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 30, // Considera os dados frescos por 30s
-      refetchOnWindowFocus: false, // Evita requests ao clicar na janela
-      refetchOnReconnect: false, // Evita disparos se a rede oscilar
-      retry: (failureCount, error: unknown) => {
-        const err = error as { response?: { status?: number }; status?: number };
-        const status = err?.response?.status || err?.status;
-        if (status === 429 || status === 401) return false;
+      staleTime: 1000 * 30,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: (failureCount, error: any) => {
+        if (error?.status === 429 || error?.status === 401) return false;
         return failureCount < 2;
       },
     },
   },
 });
 
-// 💡 SOLUÇÃO: injetamos o queryClient no bloco 'context' exigido pelo router
+// Inicializamos o roteador apenas com a "casca" do contexto para o TypeScript
 const router = createRouter({
   routeTree,
   context: {
     queryClient,
+    auth: undefined!, // 💡 Será injetado dinamicamente abaixo
   },
 });
 
-// Registra o router no TypeScript para tipagem estática dos links
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <RouterProvider router={router} />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const auth = useAuth(); // 💡 Lê o estado de autenticação reativo (com hydrated, token, etc.)
+
+  // Evita flashes de tela e redirecionamentos errados enquanto lê o localStorage pela primeira vez
+  if (!auth.hydrated) {
+    return null; // Ou um esqueleto/loading spinner global elegante
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        {/* 💡 A MÁGICA ACONTECE AQUI: Passamos o 'auth' reativo para o contexto do router */}
+        <RouterProvider router={router} context={{ auth }} />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
 export default App;
