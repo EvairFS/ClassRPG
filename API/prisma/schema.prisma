@@ -1,57 +1,278 @@
-import { Router } from "express";
-import { prisma } from "./prisma"; // Ajuste o caminho do seu cliente Prisma
+// ── CONFIGURAÇÕES DO PRISMA ──
+generator client {
+  provider = "prisma-client-js"
+}
 
-const router = Router();
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-router.post("/missions", async (req, res) => {
-  try {
-    const { 
-      title, 
-      description, 
-      type, 
-      difficulty, 
-      xpReward, 
-      monsterHp, 
-      goldReward, 
-      deadline,
-      questions // Array enviado pelo front
-    } = req.body;
+// ── ENUMS (Mapeados a partir das CONSTRAINTS CHECK do SQL) ──
 
-    // Suposição: você pega o ID do professor autenticado pelo middleware de token
-    const teacherId = req.user?.id; 
+enum Role {
+  student
+  teacher
+}
 
-    const newMission = await prisma.mission.create({
-      data: {
-        title,
-        description,
-        type,
-        difficulty,
-        xp_reward: Number(xpReward),
-        monster_hp: Number(monsterHp) || 100,
-        gold_reward: Number(goldReward) || 0,
-        deadline: new Date(deadline),
-        teacher_id: teacherId,
-        
-        // ⚔️ Cria as perguntas vinculadas automaticamente usando a API do Prisma
-        questions: {
-          create: questions.map((q: any) => ({
-            statement: q.text,          // Mapeia 'text' do front para 'statement' do banco
-            options: q.options,
-            correct_index: q.correctIndex, // Mapeia camelCase para snake_case do banco
-            damage: q.damage || 25,
-          })),
-        },
-      },
-      include: {
-        questions: true, // Retorna a missão com as perguntas inclusas
-      },
-    });
+enum TeacherStatus {
+  active
+  pending
+}
 
-    return res.status(201).json({ data: newMission });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ error: "Erro ao criar a missão. Verifique os campos." });
-  }
-});
+enum Rarity {
+  common
+  rare
+  epic
+  legendary
+}
 
-export default router;
+enum MissionType {
+  daily
+  weekly
+  special
+  event
+  challenge
+}
+
+enum Difficulty {
+  Easy
+  Medium
+  Hard
+  Epic
+}
+
+enum NotificationType {
+  xp
+  mission
+  achievement
+  system
+  feedback
+}
+
+enum ActivityStatus {
+  pending
+  submitted
+  graded
+}
+
+// ── MODELOS DO BANCO DE DADOS ──
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique
+  password      String
+  role          Role
+  name          String
+  
+  // Relacionamentos 1:1 e 1:N
+  teacher       Teacher?
+  student       Student?
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Teacher {
+  id             String        @id @db.Uuid
+  avatar         String
+  subject        String
+  classes        String[]      @default([])
+  students_count Int           @default(0)
+  status         TeacherStatus @default(active)
+  
+  // Vinculo 1:1 com User
+  user           User          @relation(fields: [id], references: [id], onDelete: Cascade)
+  
+  // Relacionamentos
+  missions       Mission[]
+  activities     Activity[]
+
+  @@map("teachers")
+}
+
+model Team {
+  id         String       @id @default(uuid()) @db.Uuid
+  name       String
+  emblem     String
+  xp         Int          @default(0)
+  weekly_xp  Int          @default(0)
+  motto      String?
+  
+  // Relacionamentos
+  students   Student[]    @relation("TeamStudents")
+  members    TeamMember[]
+
+  @@map("teams")
+}
+
+model Student {
+  id                   String               @id @db.Uuid
+  classroom            String
+  xp                   Int                  @default(0)
+  level                Int                  @default(1)
+  patent               String               @default("Novato")
+  streak               Int                  @default(0)
+  missions_completed   Int                  @default(0)
+  activities_completed Int                  @default(0)
+  team_id              String?              @db.Uuid
+  current_hp           Int                  @default(100)
+  max_hp               Int                  @default(100)
+  gold                 Int                  @default(0)
+  gender               String?              @default("MASCULINO")
+  class                String?              @default("GUERREIRO")
+  
+  appearance_skin_color String?             @default("#FCD5B5")
+  appearance_hair_style String?             @default("SHORT")
+  appearance_hair_color String?             @default("#4A3121")
+
+  // Vínculo 1:1 com User
+  user                 User                 @relation(fields: [id], references: [id], onDelete: Cascade)
+  
+  // Vínculo 1:N com Team
+  team                 Team?                @relation("TeamStudents", fields: [team_id], references: [id], onDelete: SetNull)
+  
+  // Tabelas Pivô / Relacionamentos
+  team_members         TeamMember[]
+  achievements         StudentAchievement[]
+  student_missions     StudentMission[]
+  student_activities   StudentActivity[]
+
+  @@map("students")
+}
+
+model TeamMember {
+  team_id    String  @db.Uuid
+  student_id String  @db.Uuid
+  
+  team       Team    @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  student    Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@id([team_id, student_id])
+  @@map("team_members")
+}
+
+model Achievement {
+  id           String               @id @default(uuid()) @db.Uuid
+  name         String
+  description  String
+  icon         String
+  rarity       Rarity
+  
+  // Relacionamento
+  students     StudentAchievement[]
+
+  @@map("achievements")
+}
+
+model StudentAchievement {
+  student_id     String      @db.Uuid
+  achievement_id String      @db.Uuid
+  earned         Boolean     @default(false)
+  earned_at      DateTime?   @db.Timestamptz
+  progress       Int?        @default(0)
+  
+  student        Student     @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  achievement    Achievement @relation(fields: [achievement_id], references: [id], onDelete: Cascade)
+
+  @@id([student_id, achievement_id])
+  @@map("student_achievements")
+}
+
+model Mission {
+  id               String           @id @default(uuid()) @db.Uuid
+  title            String
+  description      String
+  type             MissionType
+  difficulty       Difficulty
+  xp_reward        Int
+  deadline         DateTime         @db.Timestamptz
+  teacher_id       String?          @db.Uuid
+  monster_hp       Int              @default(100)
+  gold_reward      Int              @default(0)
+  
+  teacher          Teacher?         @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
+  questions        Question[]
+  student_missions StudentMission[]
+
+  @@map("missions")
+}
+
+model Question {
+  id            String   @id @default(uuid()) @db.Uuid
+  mission_id    String   @db.Uuid
+  statement     String
+  options       String[] @default([])
+  correct_index Int
+  damage        Int      @default(25)
+  
+  mission       Mission  @relation(fields: [mission_id], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+}
+
+model Activity {
+  id                 String            @id @default(uuid()) @db.Uuid
+  title              String
+  description        String
+  subject            String
+  difficulty         Difficulty
+  xp_reward          Int
+  deadline           DateTime          @db.Timestamptz
+  instructions       String?
+  teacher_id         String?           @db.Uuid
+  
+  teacher            Teacher?          @relation(fields: [teacher_id], references: [id], onDelete: SetNull)
+  student_activities StudentActivity[]
+
+  @@map("activities")
+}
+
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  title      String
+  body       String
+  type       NotificationType
+  read       Boolean          @default(false)
+  created_at DateTime         @default(now()) @db.Timestamptz
+  user_id    String?          @db.Uuid
+  
+  user       User?            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model StudentMission {
+  id                 String   @id @default(uuid()) @db.Uuid
+  student_id         String   @db.Uuid
+  mission_id         String   @db.Uuid
+  progress           Int      @default(0)
+  total              Int
+  status             String   @default("IN_PROGRESS")
+  created_at         DateTime @default(now()) @db.Timestamptz
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz
+  current_monster_hp Int?
+  current_student_hp Int?
+  
+  mission            Mission  @relation(fields: [mission_id], references: [id], onDelete: Cascade)
+  student            Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@map("student_missions")
+}
+
+model StudentActivity {
+  id           String         @id @default(uuid()) @db.Uuid
+  student_id   String         @db.Uuid
+  activity_id  String         @db.Uuid
+  status       ActivityStatus @default(pending)
+  grade        Int?
+  submission   String?
+  feedback     String?
+  created_at   DateTime       @default(now()) @db.Timestamptz
+  updated_at   DateTime       @default(now()) @updatedAt @db.Timestamptz
+  
+  student      Student        @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  activity     Activity       @relation(fields: [activity_id], references: [id], onDelete: Cascade)
+
+  @@map("student_activities")
+}
