@@ -66,9 +66,7 @@ function NotificationsPage() {
   });
   const markAll = useMutation({
     mutationFn: async () => {
-      await Promise.all(
-        items.filter((n) => !n.read).map((n) => api.markNotificationRead(n.id)),
-      );
+      await Promise.all(items.filter((n) => !n.read).map((n) => api.markNotificationRead(n.id)));
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });

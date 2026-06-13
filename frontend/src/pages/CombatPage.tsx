@@ -2,8 +2,6 @@ import axios from "axios";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CombatArena } from "@/components/CombatArena";
-// Se o seu projeto usa um hook para pegar o usuário logado, importe-o aqui:
-// import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 type ApiQuestion = {
   id: string;
@@ -35,9 +33,6 @@ export function CombatPage() {
   const queryClient = useQueryClient();
   const { missionId } = useParams({ strict: false });
 
-  // Se o seu backend precisar identificar o aluno pelo token, descomente a linha abaixo:
-  // const { user, token } = useCurrentUser();
-
   const {
     data: response,
     isLoading,
@@ -53,16 +48,16 @@ export function CombatPage() {
 
   if (!missionId || isLoading) {
     return (
-      <div className="text-white min-h-screen bg-slate-950 flex items-center justify-center">
-        Carregando batalha...
+      <div className="text-white min-h-screen bg-slate-950 flex items-center justify-center font-medium tracking-wide">
+        ⚔️ Carregando batalha e invocando monstros...
       </div>
     );
   }
 
   if (error || !response?.data) {
     return (
-      <div className="text-red-500 min-h-screen bg-slate-950 flex items-center justify-center">
-        Erro ao carregar missão.
+      <div className="text-red-500 min-h-screen bg-slate-950 flex items-center justify-center font-bold">
+        ❌ Erro ao carregar missão nos pergaminhos do reino.
       </div>
     );
   }
@@ -71,8 +66,8 @@ export function CombatPage() {
 
   if (!mission.questions || mission.questions.length === 0) {
     return (
-      <div className="text-yellow-500 min-h-screen bg-slate-950 flex items-center justify-center">
-        Esta missão não tem perguntas cadastradas.
+      <div className="text-yellow-500 min-h-screen bg-slate-950 flex items-center justify-center font-bold">
+        ⚠️ Esta missão está vazia e sem perigos cadastrados.
       </div>
     );
   }
@@ -83,42 +78,23 @@ export function CombatPage() {
     correctIndex: q.correct_index,
   }));
 
+  // Função única consolidada para salvar progresso no PostgreSQL
   const handleVictory = async () => {
     try {
-      // Agora essa rota vai responder com 200 OK!
-      await axios.post(`http://localhost:3001/api/missions/${missionId}/finish`);
-
-      // Limpa o cache do React Query para o painel atualizar o Ouro na hora
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      await queryClient.invalidateQueries({ queryKey: ["student"] });
-    } catch (err) {
-      console.error("Erro ao salvar recompensas no banco:", err);
-    } finally {
-      navigate({ to: "/dashboard" });
-    }
-  };
-
-  // 🔥 Função que faz a mágica acontecer no PostgreSQL ao vencer
-  const handleVictory = async () => {
-    try {
-      // Faz o disparo para a rota do seu servidor atualizar o ouro/XP
       await axios.post(
         `http://localhost:3001/api/missions/${missionId}/complete`,
+        {},
         {
-          // studentId: user?.id // Envie o ID se o seu backend pedir no body
-        },
-        {
-          // headers: { Authorization: `Bearer ${token}` } // Envie o token se sua rota for protegida
+          // headers: { Authorization: `Bearer ${token}` } // Caso use autenticação futuramente
         },
       );
 
-      // Avisa o React Query para limpar o cache antigo do painel
+      // Invalida os caches do TanStack Query para atualizar instantaneamente o HUD principal do aluno
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       await queryClient.invalidateQueries({ queryKey: ["student"] });
     } catch (err) {
-      console.error("Erro ao salvar recompensas no banco:", err);
+      console.error("Erro ao salvar recompensas nas profundezas do banco:", err);
     } finally {
-      // Garante o retorno do usuário para o painel atualizado
       navigate({ to: "/dashboard" });
     }
   };
@@ -128,10 +104,8 @@ export function CombatPage() {
       bossName={mission.title}
       initialBossHp={Number(mission.monster_hp)}
       questions={questions}
-      // Injeta os dados dinâmicos do banco na Arena
       xpReward={Number(mission.xp_reward)}
       goldReward={Number(mission.gold_reward)}
-      // Passa a função de salvamento
       onVictory={handleVictory}
       onDefeat={() => navigate({ to: "/dashboard" })}
       onFlee={() => navigate({ to: "/dashboard" })}
