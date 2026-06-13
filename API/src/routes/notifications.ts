@@ -8,15 +8,6 @@ const router = Router();
 
 router.use(requireAuth);
 
-// ── GET /api/notifications ──
-router.get("/", async (_req, res, next) => {
-  try {
-    const rows = await q("SELECT * FROM notifications ORDER BY id");
-    success(res, rows);
-  } catch (err) {
-    next(err);
-  }
-});
 
 // ── PATCH /api/notifications/:id/read ──
 router.patch("/:id/read", async (req, res, next) => {
