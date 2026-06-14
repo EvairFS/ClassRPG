@@ -59,23 +59,27 @@ export function CombatArena({
     if (animation !== "IDLE") return;
 
     try {
-      // 🕵️‍♂️ Tentativa inteligente de captura de token em múltiplos formatos comuns
-      let token = localStorage.getItem("token") || "";
+      let token = "";
 
-      // Se não achou na chave direta, verifica se o login salvou o objeto "user" completo contendo o token
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            const parsedUser = JSON.parse(storedUser);
-            token = parsedUser?.token || "";
-          } catch {
-            // Ignora erro de parse e segue o fluxo
-          }
+      // 🎯 1. Busca a chave real identificada no Local Storage
+      const authData = localStorage.getItem("classrpg.auth");
+
+      // 📦 2. Extrai o token de dentro do objeto JSON descriptografado
+      if (authData) {
+        try {
+          const parsedAuth = JSON.parse(authData);
+          token = parsedAuth?.token || "";
+        } catch {
+          // Ignora erro de parse interno se houver corrupção
         }
       }
 
-      // 🔥 LOG DE SEGURANÇA: Mostra se o token realmente existe antes de disparar o fetch
+      // 🛡️ Fallback preventivo caso o ambiente mude ou use chaves legadas
+      if (!token) {
+        token = localStorage.getItem("token") || "";
+      }
+
+      // 🔥 LOG DE SEGURANÇA ATUALIZADO
       console.log("🔑 [ARENA AUTH] Token localizado:", token ? "Sim ✅" : "Não ❌ (String Vazia)");
 
       if (!token) {
@@ -85,7 +89,7 @@ export function CombatArena({
         return;
       }
 
-      // Dispara a requisição para a API
+      // Dispara a requisição para a API enviando o token correto
       const response = (await api.answerQuestion(currentQuestion.id, index, token)) as unknown;
 
       // Desembrulha respostas tanto diretas quanto envelopadas em .data (Axios fallback)
