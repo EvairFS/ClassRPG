@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Swords, Backpack, LogOut, Heart, Trophy, Skull, Star, Coins, Flame } from "lucide-react";
 
-// 1. AJUSTADO: Interface agora mapeia perfeitamente o JSON do Back-end
 interface Question {
-  statement: string; // Mudou de 'text' para 'statement'
+  statement: string;
   options: string[];
-  correct_index: number; // Mudou de 'correctIndex' para 'correct_index'
+  correct_index: number;
 }
 
 interface CombatArenaProps {
@@ -55,8 +54,15 @@ export function CombatArena({
   const handleSelectOption = (index: number) => {
     if (animation !== "IDLE") return;
 
-    // 2. AJUSTADO: Verificação agora usa o correct_index vindo do banco
-    if (index === currentQuestion.correct_index) {
+    // Garante a conversão para número caso a API retorne uma string numérica (ex: "0")
+    const dbCorrectIndex = Number(currentQuestion.correct_index);
+
+    // ── CONFIGURAÇÃO DE ÍNDICE DO BANCO DE DADOS ──
+    // Se no seu banco a primeira alternativa (A) for salva como 0, mantenha: index === dbCorrectIndex
+    // Se no seu banco a primeira alternativa (A) for salva como 1, altere para: (index + 1) === dbCorrectIndex
+    const isAnswerCorrect = index === dbCorrectIndex;
+
+    if (isAnswerCorrect) {
       const newBossHp = Math.max(0, bossHp - computedDamage);
       setBossHp(newBossHp);
       setAnimation("HIT_BOSS");
@@ -93,7 +99,6 @@ export function CombatArena({
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col select-none relative antialiased font-sans">
-      {/* ── SISTEMA DE ESTILOS DA MASMORRA ── */}
       <style>{`
         @keyframes rpg-boss-hit {
           0% { transform: scale(1) translateX(0); filter: brightness(1) saturate(1); }
@@ -228,7 +233,7 @@ export function CombatArena({
         </div>
       </header>
 
-      {/* ── MEIO: CENÁRIO CAPRICHADO DA MASMORRA ── */}
+      {/* ── MEIO: CENÁRIO DA MASMORRA ── */}
       <div
         className={`flex-1 max-w-2xl w-full mx-auto flex flex-col justify-end items-center relative overflow-hidden bg-stone-950 border-x-2 border-stone-800 min-h-[340px] shadow-[inset_0_0_100px_rgba(0,0,0,1)] transition-all duration-300
           ${animation === "HURT_PLAYER" ? "animate-rpg-shake shadow-[inset_0_0_90px_rgba(185,28,28,0.6)] border-red-950" : ""}`}
@@ -289,7 +294,7 @@ export function CombatArena({
                 </span>
               )}
             </div>
-            <div className="h-3 w-24 bg-black/95 rounded-full blur-[3px] mt-1 Shadow-2xl"></div>
+            <div className="h-3 w-24 bg-black/95 rounded-full blur-[3px] mt-1 shadow-2xl"></div>
           </div>
         </div>
       </div>
@@ -364,10 +369,9 @@ export function CombatArena({
               <div className="space-y-4">
                 <div className="bg-stone-950/60 p-3.5 rounded-xl border border-stone-850 shadow-inner">
                   <span className="text-amber-500 font-mono text-2xs uppercase tracking-widest block mb-1 font-bold">
-                    📜 Conconjure sua Magia (Responda Corretamente):
+                    📜 Conjure sua Magia (Responda Corretamente):
                   </span>
                   <p className="text-stone-200 text-xs md:text-sm font-medium leading-relaxed">
-                    {/* 3. AJUSTADO: Agora lê '.statement' em vez de '.text' */}
                     {currentQuestion?.statement || "Carregando enigma..."}
                   </p>
                 </div>
