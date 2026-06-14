@@ -5,6 +5,8 @@ interface Question {
   statement: string;
   options: string[];
   correct_index: number;
+  correctIndex?: number;
+  [key: string]: unknown;
 }
 
 interface CombatArenaProps {
@@ -54,13 +56,23 @@ export function CombatArena({
   const handleSelectOption = (index: number) => {
     if (animation !== "IDLE") return;
 
-    // Garante a conversão para número caso a API retorne uma string numérica (ex: "0")
-    const dbCorrectIndex = Number(currentQuestion.correct_index);
+    // 1. Pega o texto da alternativa que o usuário clicou
+    const selectedOptionText = currentQuestion.options[index];
 
-    // ── CONFIGURAÇÃO DE ÍNDICE DO BANCO DE DADOS ──
-    // Se no seu banco a primeira alternativa (A) for salva como 0, mantenha: index === dbCorrectIndex
-    // Se no seu banco a primeira alternativa (A) for salva como 1, altere para: (index + 1) === dbCorrectIndex
-    const isAnswerCorrect = index === dbCorrectIndex;
+    // 2. Tenta capturar o índice correto tanto em snake_case quanto em camelCase (caso o back mude de ideia)
+    const rawCorrect =
+      currentQuestion.correct_index !== undefined
+        ? currentQuestion.correct_index
+        : (currentQuestion as Question).correctIndex;
+
+    // 3. BLINDAGEM TRIPLA: A resposta será considerada correta se:
+    const isAnswerCorrect =
+      // Caso A: O banco salva o índice começando em 0 (0, 1, 2...)
+      index === Number(rawCorrect) ||
+      // Caso B: O banco salva o índice começando em 1 (1, 2, 3...)
+      index + 1 === Number(rawCorrect) ||
+      // Caso C: O back-end enviou o texto corrido da resposta em vez do número do índice
+      String(rawCorrect).trim().toLowerCase() === String(selectedOptionText).trim().toLowerCase();
 
     if (isAnswerCorrect) {
       const newBossHp = Math.max(0, bossHp - computedDamage);
