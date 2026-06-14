@@ -41,11 +41,24 @@ export function CombatPage() {
   } = useQuery({
     queryKey: ["mission", missionId],
     queryFn: async () => {
-      const res = await axios.get<ApiResponse>(`https://classrpg-api-26wl.onrender.com/api/missions/${missionId}`);
+      const res = await axios.get<ApiResponse>(
+        `https://classrpg-api-26wl.onrender.com/api/missions/${missionId}`,
+      );
       return res.data;
     },
     enabled: !!missionId,
   });
+
+  const questions = useMemo(() => {
+    if (!response?.data?.questions) return [];
+    return response.data.questions.map((q) => ({
+      ...q,
+      text: q.statement, // Caso o CombatArena use .text
+      statement: q.statement, // Caso o CombatArena use .statement
+      title: q.statement, // Caso o CombatArena use .title
+      correctIndex: q.correct_index,
+    }));
+  }, [response?.data?.questions]);
 
   if (!missionId || isLoading) {
     return (
@@ -72,17 +85,6 @@ export function CombatPage() {
       </div>
     );
   }
-
-  const questions = useMemo(() => {
-    if (!mission?.questions) return [];
-    return mission.questions.map((q) => ({
-      ...q,
-      text: q.statement, // Caso o CombatArena use .text
-      statement: q.statement, // Caso o CombatArena use .statement
-      title: q.statement, // Caso o CombatArena use .title
-      correctIndex: q.correct_index,
-    }));
-  }, [mission?.questions]);
 
   // Função única consolidada para salvar progresso no PostgreSQL
   const handleVictory = async () => {

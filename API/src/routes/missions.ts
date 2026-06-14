@@ -87,7 +87,18 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       throw new NotFoundError("Pergunta não encontrada.");
     }
     
-    const isCorrect = student_answer_index === question.correct_index;
+    // ─── BLINDAGEM DE TIPOS E BASES APLICADA AQUI ───
+    const rawStudentAnswer = Number(student_answer_index);
+    const rawCorrectIndex = Number(question.correct_index);
+
+    const isCorrect = 
+      // Caso A: Ambos usam a mesma base (ex: 0 e 0, ou 1 e 1)
+      rawStudentAnswer === rawCorrectIndex ||
+      // Caso B: Front envia base 0 (0,1,2) e Banco salvou base 1 (1,2,3)
+      (rawStudentAnswer + 1) === rawCorrectIndex ||
+      // Caso C: Front envia base 1 (1,2,3) e Banco salvou base 0 (0,1,2)
+      rawStudentAnswer === (rawCorrectIndex + 1);
+    // ────────────────────────────────────────────────
 
     await q(
       "INSERT INTO student_battle_logs (student_id, question_id, is_correct) VALUES ($1, $2, $3)",
@@ -158,7 +169,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
 });
 
 // ── GET /api/missions/my-missions (PROFESSOR: Ver missões criadas por ele) ──
-// 🌟 SUBIU: Agora o Express lê esta rota antes de cair no parâmetro genérico /:id
 router.get("/my-missions", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const teacherId = req.user?.id;
@@ -323,7 +333,6 @@ router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunct
       throw new BadRequestError("Estudante não identificado.");
     }
 
-    // Busca os dados atualizados direto da tabela students
     const student = await qOne(
       "SELECT id, classroom, xp, level, patent, streak, gold FROM students WHERE id = $1",
       [studentId]
@@ -343,13 +352,12 @@ router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunct
 router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
-    const studentId = req.user?.id; // Pega o ID do aluno autenticado pelo token
+    const studentId = req.user?.id; 
 
     if (!studentId) {
       throw new BadRequestError("Estudante não autenticado.");
     }
 
-    // 1. Busca os prêmios da missão (XP e Ouro) e o HP total do monstro
     const mission = await qOne(
       "SELECT xp_reward, gold_reward, monster_hp FROM missions WHERE id = $1", 
       [missionId]
@@ -358,7 +366,6 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
       throw new NotFoundError("Missão não encontrada.");
     }
 
-    // 2. Trava de segurança: evita que o aluno clique várias vezes e ganhe ouro infinito
     const studentMission = await qOne(
       "SELECT status FROM student_missions WHERE student_id = $1 AND mission_id = $2",
       [studentId, missionId]
@@ -368,7 +375,6 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
       throw new BadRequestError("Você já concluiu esta missão!");
     }
 
-    // 3. Atualiza o status da missão do aluno para COMPLETED e iguala o progresso ao HP do monstro
     await q(
       `UPDATE student_missions 
        SET status = 'COMPLETED', progress = $1, updated_at = NOW() 
@@ -376,7 +382,6 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
       [Number(mission.monster_hp), studentId, missionId]
     );
 
-    // 4. SOMA O OURO, XP E INCREMENTA AS MISSÕES CONCLUÍDAS NA TABELA STUDENTS
     await q(
       `UPDATE students 
        SET xp = xp + $1, 
@@ -386,7 +391,6 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
       [Number(mission.xp_reward), Number(mission.gold_reward), studentId]
     );
 
-    // Retorna o sucesso para o front-end
     success(res, { 
       message: "Vitória registrada com sucesso! Recompensas creditadas no banco de dados." 
     });

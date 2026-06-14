@@ -100,7 +100,13 @@ export function AppShell({ role, title, children }: AppShellProps) {
   });
 
   // Hack temporário para o TS aceitar a propriedade dinâmica sem quebrar o build
-  const studentDashboard = dashboardData as any;
+  const studentDashboard = dashboardData as {
+    proximoDesafio?: {
+      titulo: string;
+      diasRestantes: string;
+      xpReward: number;
+    };
+  } | null;
 
   if (hydrated && !isAuthenticated) {
     return null;

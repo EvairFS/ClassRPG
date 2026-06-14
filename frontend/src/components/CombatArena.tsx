@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Swords, Backpack, LogOut, Heart, Trophy, Skull, Star, Coins, Flame } from "lucide-react";
+import { api } from "../api"; // Certifique-se de que o caminho até o seu arquivo api.ts está correto
 
 interface Question {
+  id: string; // ✨ Adicionado explicitamente para o TypeScript não reclamar no método da API
   statement: string;
   options: string[];
   correct_index: number;
@@ -53,59 +55,71 @@ export function CombatArena({
   const bossHpPercent = (bossHp / initialBossHp) * 100;
   const computedDamage = Math.ceil(initialBossHp / questions.length);
 
-  const handleSelectOption = (index: number) => {
+  const handleSelectOption = async (index: number) => {
+    // Impede cliques repetidos enquanto uma animação está rodando
     if (animation !== "IDLE") return;
 
-    // 1. Pega o texto da alternativa que o usuário clicou
-    const selectedOptionText = currentQuestion.options[index];
+    try {
+      // Busca o token salvo no ecossistema do seu app (padrão localStorage)
+      const token = localStorage.getItem("token") || "";
 
-    // 2. Tenta capturar o índice correto tanto em snake_case quanto em camelCase (caso o back mude de ideia)
-    const rawCorrect =
-      currentQuestion.correct_index !== undefined
-        ? currentQuestion.correct_index
-        : (currentQuestion as Question).correctIndex;
+      // 🔥 Chamando o método correto via Fetch nativo que está no seu api.ts
+      const response = (await api.answerQuestion(currentQuestion.id, index, token)) as unknown;
 
-    // 3. BLINDAGEM TRIPLA: A resposta será considerada correta se:
-    const isAnswerCorrect =
-      // Caso A: O banco salva o índice começando em 0 (0, 1, 2...)
-      index === Number(rawCorrect) ||
-      // Caso B: O banco salva o índice começando em 1 (1, 2, 3...)
-      index + 1 === Number(rawCorrect) ||
-      // Caso C: O back-end enviou o texto corrido da resposta em vez do número do índice
-      String(rawCorrect).trim().toLowerCase() === String(selectedOptionText).trim().toLowerCase();
+      // Como o fetch nativo já resolve o JSON direto, eliminamos o .data padrão do Axios.
+      // Se o seu backend envelopar a resposta em uma propriedade 'data', usamos ela; senão, o objeto raiz.
+      const backendResult = (response as any)?.data || response;
 
-    if (isAnswerCorrect) {
-      const newBossHp = Math.max(0, bossHp - computedDamage);
-      setBossHp(newBossHp);
-      setAnimation("HIT_BOSS");
+      const { correct, damage_dealt, mission_completed } = backendResult;
 
-      setTimeout(() => {
-        setAnimation("IDLE");
-        if (newBossHp === 0) {
-          setResult("VICTORY");
-          return;
-        }
-        if (currentQuestionIndex + 1 < questions.length) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-        }
-        setPhase("MENU");
-      }, 600);
-    } else {
-      const newPlayerHp = Math.max(0, playerHp - 25);
-      setPlayerHp(newPlayerHp);
-      setAnimation("HURT_PLAYER");
+      if (correct) {
+        // ⚔️ ACERTOU! O back-end confirmou o acerte.
+        const danoAplicado = damage_dealt || computedDamage;
+        const newBossHp = Math.max(0, bossHp - danoAplicado);
 
-      setTimeout(() => {
-        setAnimation("IDLE");
-        if (newPlayerHp === 0) {
-          setResult("DEFEAT");
-          return;
-        }
-        if (currentQuestionIndex + 1 < questions.length) {
-          setCurrentQuestionIndex(currentQuestionIndex + 1);
-        }
-        setPhase("MENU");
-      }, 600);
+        setBossHp(newBossHp);
+        setAnimation("HIT_BOSS");
+
+        setTimeout(() => {
+          setAnimation("IDLE");
+
+          // Se o monstro morreu de acordo com o HP ou a flag do back, é Vitória!
+          if (mission_completed || newBossHp === 0) {
+            setResult("VICTORY");
+            return;
+          }
+
+          // Avança para a próxima pergunta
+          if (currentQuestionIndex + 1 < questions.length) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+          }
+          setPhase("MENU");
+        }, 600);
+      } else {
+        // 👹 ERROU! O ogro contra-ataca.
+        const newPlayerHp = Math.max(0, playerHp - 25);
+
+        setPlayerHp(newPlayerHp);
+        setAnimation("HURT_PLAYER");
+
+        setTimeout(() => {
+          setAnimation("IDLE");
+
+          if (newPlayerHp === 0) {
+            setResult("DEFEAT");
+            return;
+          }
+
+          // Avança para a próxima pergunta mesmo errando
+          if (currentQuestionIndex + 1 < questions.length) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+          }
+          setPhase("MENU");
+        }, 600);
+      }
+    } catch (error) {
+      console.error("Erro ao processar a resposta na arena:", error);
+      alert("Não foi possível enviar sua resposta. Verifique a conexão com o servidor.");
     }
   };
 
