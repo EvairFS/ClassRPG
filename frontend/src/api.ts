@@ -10,7 +10,7 @@ import type {
 
 // Use VITE_API_BASE environment variable for production (set in .env.production)
 // Falls back to localhost:3001 for local development
-const BASE_URL = import.meta.env.VITE_API_BASE ?? "http://localhost:3001/api";
+const BASE_URL = import.meta.env.VITE_API_BASE ?? "https://classrpg-api-26wl.onrender.com/api";
 
 interface LoginResponse {
   token: string;

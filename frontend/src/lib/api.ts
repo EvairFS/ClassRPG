@@ -10,7 +10,8 @@ import type {
 } from "@/types";
 
 const BASE_URL =
-  (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://localhost:3001/api";
+  (import.meta.env.VITE_API_BASE as string | undefined) ??
+  "https://classrpg-api-26wl.onrender.com/api";
 
 // ── snake_case → camelCase deep transform ──────────────────────────────
 const snakeToCamel = (key: string) => key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());

@@ -41,7 +41,7 @@ export function CombatPage() {
   } = useQuery({
     queryKey: ["mission", missionId],
     queryFn: async () => {
-      const res = await axios.get<ApiResponse>(`http://localhost:3001/api/missions/${missionId}`);
+      const res = await axios.get<ApiResponse>(`https://classrpg-api-26wl.onrender.com/api/missions/${missionId}`);
       return res.data;
     },
     enabled: !!missionId,
@@ -88,7 +88,7 @@ export function CombatPage() {
   const handleVictory = async () => {
     try {
       await axios.post(
-        `http://localhost:3001/api/missions/${missionId}/complete`,
+        `https://classrpg-api-26wl.onrender.com/api/missions/${missionId}/complete`,
         {},
         {
           // headers: { Authorization: `Bearer ${token}` } // Caso use autenticação futuramente
