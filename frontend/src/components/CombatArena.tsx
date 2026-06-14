@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Swords, Backpack, LogOut, Heart, Trophy, Skull, Star, Coins, Flame } from "lucide-react";
-import { api } from "../api"; // Certifique-se de que o caminho até o seu arquivo api.ts está correto
+import { api } from "../api";
 
 interface Question {
-  id: string; // ✨ Adicionado explicitamente para o TypeScript não reclamar no método da API
+  id: string;
   statement: string;
   options: string[];
   correct_index: number;
@@ -56,24 +56,44 @@ export function CombatArena({
   const computedDamage = Math.ceil(initialBossHp / questions.length);
 
   const handleSelectOption = async (index: number) => {
-    // Impede cliques repetidos enquanto uma animação está rodando
     if (animation !== "IDLE") return;
 
     try {
-      // Busca o token salvo no ecossistema do seu app (padrão localStorage)
-      const token = localStorage.getItem("token") || "";
+      // 🕵️‍♂️ Tentativa inteligente de captura de token em múltiplos formatos comuns
+      let token = localStorage.getItem("token") || "";
 
-      // 🔥 Chamando o método correto via Fetch nativo que está no seu api.ts
+      // Se não achou na chave direta, verifica se o login salvou o objeto "user" completo contendo o token
+      if (!token) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            token = parsedUser?.token || "";
+          } catch {
+            // Ignora erro de parse e segue o fluxo
+          }
+        }
+      }
+
+      // 🔥 LOG DE SEGURANÇA: Mostra se o token realmente existe antes de disparar o fetch
+      console.log("🔑 [ARENA AUTH] Token localizado:", token ? "Sim ✅" : "Não ❌ (String Vazia)");
+
+      if (!token) {
+        alert(
+          "🚨 Sessão expirada ou inválida! Por favor, refaça o login para computar suas respostas.",
+        );
+        return;
+      }
+
+      // Dispara a requisição para a API
       const response = (await api.answerQuestion(currentQuestion.id, index, token)) as unknown;
 
-      // Como o fetch nativo já resolve o JSON direto, eliminamos o .data padrão do Axios.
-      // Se o seu backend envelopar a resposta em uma propriedade 'data', usamos ela; senão, o objeto raiz.
+      // Desembrulha respostas tanto diretas quanto envelopadas em .data (Axios fallback)
       const backendResult = (response as any)?.data || response;
 
       const { correct, damage_dealt, mission_completed } = backendResult;
 
       if (correct) {
-        // ⚔️ ACERTOU! O back-end confirmou o acerte.
         const danoAplicado = damage_dealt || computedDamage;
         const newBossHp = Math.max(0, bossHp - danoAplicado);
 
@@ -83,20 +103,17 @@ export function CombatArena({
         setTimeout(() => {
           setAnimation("IDLE");
 
-          // Se o monstro morreu de acordo com o HP ou a flag do back, é Vitória!
           if (mission_completed || newBossHp === 0) {
             setResult("VICTORY");
             return;
           }
 
-          // Avança para a próxima pergunta
           if (currentQuestionIndex + 1 < questions.length) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
           }
           setPhase("MENU");
         }, 600);
       } else {
-        // 👹 ERROU! O ogro contra-ataca.
         const newPlayerHp = Math.max(0, playerHp - 25);
 
         setPlayerHp(newPlayerHp);
@@ -110,7 +127,6 @@ export function CombatArena({
             return;
           }
 
-          // Avança para a próxima pergunta mesmo errando
           if (currentQuestionIndex + 1 < questions.length) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
           }
@@ -118,8 +134,10 @@ export function CombatArena({
         }, 600);
       }
     } catch (error) {
-      console.error("Erro ao processar a resposta na arena:", error);
-      alert("Não foi possível enviar sua resposta. Verifique a conexão com o servidor.");
+      console.error("🚨 Erro detectado no fluxo da arena:", error);
+      alert(
+        "Não foi possível enviar sua resposta. Verifique a conexão com o servidor ou se sua sessão expirou.",
+      );
     }
   };
 
