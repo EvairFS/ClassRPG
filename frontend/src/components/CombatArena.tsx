@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Swords, Backpack, LogOut, Heart, Trophy, Skull, Star, Coins, Flame } from "lucide-react";
 
+// 1. AJUSTADO: Interface agora mapeia perfeitamente o JSON do Back-end
 interface Question {
-  text: string;
+  statement: string; // Mudou de 'text' para 'statement'
   options: string[];
-  correctIndex: number;
+  correct_index: number; // Mudou de 'correctIndex' para 'correct_index'
 }
 
 interface CombatArenaProps {
@@ -54,7 +55,8 @@ export function CombatArena({
   const handleSelectOption = (index: number) => {
     if (animation !== "IDLE") return;
 
-    if (index === currentQuestion.correctIndex) {
+    // 2. AJUSTADO: Verificação agora usa o correct_index vindo do banco
+    if (index === currentQuestion.correct_index) {
       const newBossHp = Math.max(0, bossHp - computedDamage);
       setBossHp(newBossHp);
       setAnimation("HIT_BOSS");
@@ -101,10 +103,9 @@ export function CombatArena({
           60% { transform: translateX(15px); }
           100% { transform: scale(1) translateX(0); filter: brightness(1) saturate(1); }
         }
-        /* Animação de investida mais pesada para o Ogro */
         @keyframes ogre-lunge {
           0% { transform: translateY(0) scale(1); }
-          20% { transform: translateY(-20px) scale(1.05); } /* Pequeno salto antes */
+          20% { transform: translateY(-20px) scale(1.05); }
           50% { transform: translateY(70px) scale(1.4); filter: drop-shadow(0 40px 30px rgba(0,0,0,1)); }
           100% { transform: translateY(0) scale(1); }
         }
@@ -128,9 +129,7 @@ export function CombatArena({
           100% { transform: translateX(-15px); opacity: 0.2; }
         }
         .animate-rpg-hit { animation: rpg-boss-hit 0.6s ease-in-out forwards; }
-        /* Aplica a nova animação pesada do Ogro */
         .animate-ogre-lunge { animation: ogre-lunge 0.6s ease-in-out forwards; }
-        /* Tremor de tela mais intenso */
         .animate-rpg-shake { animation: rpg-screen-shake 0.5s ease-in-out forwards; }
         .animate-torch-fire { animation: dungeon-flicker 0.4s infinite alternate ease-in-out; }
         .animate-dungeon-fog { animation: fog-drift 5s infinite ease-in-out; }
@@ -139,7 +138,7 @@ export function CombatArena({
       {/* ── OVERLAY: Vitória ── */}
       {result === "VICTORY" && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-stone-950/95 backdrop-blur-md p-4">
-          <div className="bg-stone-900 border-2 border-amber-500 rounded-3xl p-8 max-w-sm w-full flex flex-col items-center gap-5 shadow-2xl shadow-amber-500/10 animate-scale-in">
+          <div className="bg-stone-900 border-2 border-amber-500 rounded-3xl p-8 max-w-sm w-full flex flex-col items-center gap-5 shadow-2xl shadow-amber-500/10">
             <div className="size-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center animate-bounce">
               <Trophy className="size-10 text-amber-400" />
             </div>
@@ -234,22 +233,14 @@ export function CombatArena({
         className={`flex-1 max-w-2xl w-full mx-auto flex flex-col justify-end items-center relative overflow-hidden bg-stone-950 border-x-2 border-stone-800 min-h-[340px] shadow-[inset_0_0_100px_rgba(0,0,0,1)] transition-all duration-300
           ${animation === "HURT_PLAYER" ? "animate-rpg-shake shadow-[inset_0_0_90px_rgba(185,28,28,0.6)] border-red-950" : ""}`}
       >
-        {/* 1. Camada de Iluminação de Fundo */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(87,74,64,0.3)_0%,_transparent_75%)] pointer-events-none z-0"></div>
-
-        {/* 2. Textura Detalhada de Blocos de Pedra */}
         <div className="absolute inset-0 opacity-[0.08] bg-[linear-gradient(rgba(0,0,0,0.6)_2px,transparent_2px),linear-gradient(90deg,rgba(0,0,0,0.6)_2px,transparent_2px)] bg-[size:32px_16px] pointer-events-none z-0"></div>
-
-        {/* 3. Arquitetura de Fundo */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 w-80 h-60 rounded-t-full border-4 border-stone-900 bg-gradient-to-b from-stone-950 to-stone-900/40 opacity-70 shadow-[0_15px_30px_rgba(0,0,0,0.9)] z-0 flex items-center justify-center">
           <div className="w-64 h-48 rounded-t-full bg-stone-950 border-4 border-stone-950 shadow-[inset_0_20px_40px_rgba(0,0,0,1)] opacity-95"></div>
         </div>
-
-        {/* 4. Pilares Laterais */}
         <div className="absolute top-0 left-0 w-8 h-full bg-gradient-to-r from-stone-950 via-stone-900 to-stone-800/60 border-r border-stone-900 shadow-xl z-10 pointer-events-none"></div>
         <div className="absolute top-0 right-0 w-8 h-full bg-gradient-to-l from-stone-950 via-stone-900 to-stone-800/60 border-l border-stone-900 shadow-xl z-10 pointer-events-none"></div>
 
-        {/* 5. Tochas Medievais */}
         <div className="absolute top-16 left-12 flex flex-col items-center z-10">
           <div className="relative">
             <div className="absolute -inset-2 bg-amber-500/20 rounded-full blur-md animate-torch-fire"></div>
@@ -268,25 +259,19 @@ export function CombatArena({
           <div className="w-3 h-1 bg-stone-700 border border-stone-950 rounded-xs"></div>
         </div>
 
-        {/* 6. Chão de Paralelepípedos */}
         <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-stone-950 via-stone-900 to-stone-900/20 border-t-2 border-stone-900 z-0 pointer-events-none">
           <div className="absolute inset-0 opacity-[0.12] bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.8)_50%)] bg-[size:48px_100%] [transform:perspective(140px)_rotateX(55deg)]"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-transparent to-stone-950"></div>
         </div>
-
-        {/* 7. Névoa Sombria Rasteira */}
         <div className="absolute bottom-4 left-0 right-0 h-12 bg-gradient-to-t from-stone-900/0 via-stone-600/5 to-stone-900/0 mix-blend-screen pointer-events-none z-10 animate-dungeon-fog"></div>
 
-        {/* ── PAINEL DO INIMIGO CENTRALIZADO (O GRO) ── */}
         <div className="flex flex-col items-center z-20 relative pb-6">
-          {/* Placa do Turno */}
           <div className="mb-6 px-3 py-1 rounded-md border border-stone-800 bg-stone-950/90 backdrop-blur-xs shadow-xl">
             <span className="text-xs font-black font-mono tracking-widest text-stone-400 italic">
               TURNO {currentQuestionIndex + 1}
             </span>
           </div>
 
-          {/* Container do Ogro com Triggers Animados */}
           <div
             className={`flex flex-col items-center gap-2 relative select-none
             ${animation === "HIT_BOSS" ? "animate-rpg-hit" : ""}
@@ -296,18 +281,14 @@ export function CombatArena({
               Nível {questions.length}
             </span>
 
-            {/* 🔥 AQUI ESTÁ O NOVO CHEFE: O OGRO/TROLL 🧌 */}
             <div className="text-8xl md:text-9xl filter drop-shadow-[0_25px_20px_rgba(0,0,0,1)] relative py-2 transition-all duration-300">
               🧌
-              {/* Pop-up de Dano flutuante */}
               {animation === "HIT_BOSS" && (
                 <span className="absolute -top-10 left-1/2 -translate-x-1/2 text-4xl font-black text-yellow-400 font-mono drop-shadow-[0_5px_8px_rgba(0,0,0,1)] animate-bounce">
                   -{computedDamage}⚔️
                 </span>
               )}
             </div>
-
-            {/* Sombra realista e pesada projetada no chão */}
             <div className="h-3 w-24 bg-black/95 rounded-full blur-[3px] mt-1 Shadow-2xl"></div>
           </div>
         </div>
@@ -315,7 +296,6 @@ export function CombatArena({
 
       {/* ── BAIXO: HUD do Aluno + Caixa de Comandos RPG ── */}
       <footer className="w-full mt-auto z-20">
-        {/* Barra de Vida do Herói */}
         <div className="px-4 pb-3">
           <div className="max-w-2xl mx-auto bg-stone-900 border-2 border-stone-800 rounded-2xl px-4 py-2.5 shadow-lg bg-gradient-to-b from-stone-900 to-stone-950">
             <div className="flex items-center justify-between mb-1.5">
@@ -346,10 +326,8 @@ export function CombatArena({
           </div>
         </div>
 
-        {/* Console de Ações e Diálogos de Perguntas */}
         <div className="border-t border-stone-850 bg-stone-900 px-4 py-5 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
           <div className="max-w-2xl mx-auto min-h-[150px] flex flex-col justify-center">
-            {/* FASE: MENU */}
             {phase === "MENU" && (
               <div className="grid grid-cols-3 gap-3">
                 <button
@@ -382,7 +360,6 @@ export function CombatArena({
               </div>
             )}
 
-            {/* FASE: ATTACK (PERGUNTAS) */}
             {phase === "ATTACK" && (
               <div className="space-y-4">
                 <div className="bg-stone-950/60 p-3.5 rounded-xl border border-stone-850 shadow-inner">
@@ -390,7 +367,8 @@ export function CombatArena({
                     📜 Conconjure sua Magia (Responda Corretamente):
                   </span>
                   <p className="text-stone-200 text-xs md:text-sm font-medium leading-relaxed">
-                    {currentQuestion?.text || "Carregando enigma..."}
+                    {/* 3. AJUSTADO: Agora lê '.statement' em vez de '.text' */}
+                    {currentQuestion?.statement || "Carregando enigma..."}
                   </p>
                 </div>
 
@@ -420,7 +398,6 @@ export function CombatArena({
               </div>
             )}
 
-            {/* FASE: ITEMS */}
             {phase === "ITEMS" && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center border-b border-stone-800 pb-1.5">
