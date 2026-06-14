@@ -3,7 +3,7 @@ import cors from "cors";
 import { PORT, NODE_ENV } from "./config.js";
 import { errorHandler } from "./src/middleware/errorHandler.js";
 
-// ── Importações Corrigidas (Apontando para dentro de ./src/) ──
+// ── Importações das Rotas ──
 import authRoutes from "./src/routes/auth.js";
 import activityRoutes from "./src/routes/activities.js";
 import achievementRoutes from "./src/routes/achievements.js";
@@ -19,13 +19,17 @@ import battleRoutes from './src/routes/battle.routes.js';
 
 const app = express();
 
+// 🔥 CORREÇÃO DO RATE-LIMIT NA RENDER:
+// Diz ao Express para confiar no proxy reverso da Render para identificar os IPs reais
+app.set("trust proxy", 1); 
+
 // ── Middlewares Globais Configurados ──
 app.use(
   cors({
-    origin: "https://classrpg.classrpg.workers.dev", // Permite apenas o seu front da Cloudflare
+    origin: "https://classrpg.classrpg.workers.dev", // Seu front na Cloudflare
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // Libera o envio de cookies/tokens se houver
+    credentials: true, 
   })
 );
 app.use(express.json());
