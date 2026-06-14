@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "noEmitOnError": false
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", ".vscode/ts-hover-prettify.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

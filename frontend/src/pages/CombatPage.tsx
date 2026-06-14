@@ -2,6 +2,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CombatArena } from "@/components/CombatArena";
+import { useMemo } from "react";
 
 type ApiQuestion = {
   id: string;
@@ -72,11 +73,16 @@ export function CombatPage() {
     );
   }
 
-  const questions = mission.questions.map((q) => ({
-    ...q,
-    text: q.statement,
-    correctIndex: q.correct_index,
-  }));
+  const questions = useMemo(() => {
+    if (!mission?.questions) return [];
+    return mission.questions.map((q) => ({
+      ...q,
+      text: q.statement, // Caso o CombatArena use .text
+      statement: q.statement, // Caso o CombatArena use .statement
+      title: q.statement, // Caso o CombatArena use .title
+      correctIndex: q.correct_index,
+    }));
+  }, [mission?.questions]);
 
   // Função única consolidada para salvar progresso no PostgreSQL
   const handleVictory = async () => {
