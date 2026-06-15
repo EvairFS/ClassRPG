@@ -73,15 +73,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
     await q("BEGIN");
     inTransaction = true;
 
-    const alreadyAnswered = await qOne(
-      "SELECT id FROM student_battle_logs WHERE student_id = $1 AND question_id = $2 AND is_correct = true",
-      [studentId, question_id]
-    );
-
-    if (alreadyAnswered) {
-      throw new BadRequestError("Você já respondeu corretamente esta pergunta!");
-    }
-
     const question = await qOne("SELECT * FROM questions WHERE id = $1", [question_id]);
     if (!question) {
       throw new NotFoundError("Pergunta não encontrada.");
