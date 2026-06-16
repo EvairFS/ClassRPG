@@ -216,84 +216,7 @@ router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunct
   }
 });
 
-// 📋 ROTA DO RELATÓRIO TOTALMENTE CORRIGIDA E ALINHADA ──
-router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
-  try {
-    const missionId = req.params.id;
-    const teacherId = req.user?.id;
-
-    const mission = await qOne(
-      "SELECT id, teacher_id FROM missions WHERE id = $1", 
-      [missionId]
-    );
-    
-    if (!mission) {
-      throw new NotFoundError("Missão não encontrada.");
-    }
-
-    if (mission.teacher_id !== teacherId && req.user?.role !== 'teacher') {
-      throw new BadRequestError("Acesso negado. Apenas o professor desta missão pode ver este relatório.");
-    }
-
-    const report = await q(
-      `SELECT 
-        sbl.id as log_id,
-        sbl.student_id,
-        sbl.is_correct,
-        sbl.created_at,
-        q.statement as question_statement,
-        s.classroom,
-        u.name as student_name
-      FROM student_battle_logs sbl
-      JOIN questions q ON sbl.question_id = q.id
-      JOIN students s ON sbl.student_id = s.id
-      JOIN users u ON s.user_id = u.id
-      WHERE q.mission_id = $1
-      ORDER BY sbl.created_at DESC`,
-      [missionId]
-    );
-
-    // Retorna o relatório estruturado para o Front-end
-    return res.json(report);
-
-  } catch (error) {
-    // Encaminha o erro para o middleware global tratar
-    next(error);
-  }
-});
-
-// ── GET /api/missions/:id/status (ESTUDANTE: Verificar status da batalha) ──
-router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFunction) => {
-  try {
-    const studentId = req.user?.id;
-    const missionId = req.params.id;
-
-    const result = await qOne(
-      `SELECT m.monster_hp, sm.progress 
-       FROM student_missions sm
-       JOIN missions m ON sm.mission_id = m.id
-       WHERE sm.student_id = $1 AND sm.mission_id = $2`,
-      [studentId, missionId]
-    );
-
-    if (!result) throw new NotFoundError("Missão não encontrada ou não iniciada.");
-
-    const defeated = result.progress >= result.monster_hp;
-
-    success(res, {
-      monster_hp: result.monster_hp,
-      current_progress: result.progress,
-      is_defeated: defeated,
-      message: defeated ? "Parabéns! Monstro derrotado!" : "O monstro ainda está vivo."
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ... rotas anteriores (/, /answer, /my-missions, /profile) ...
-
-// 📋 MANTER APENAS ESTA VERSÃO DO RELATÓRIO (Apague a outra!)
+// 📋 GET /api/missions/:id/report (PROFESSOR: Relatório de acertos dos alunos) ──
 router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
@@ -337,7 +260,34 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
   }
 });
 
-// ... resto das rotas (/:id/status, /:id/finish, /:id) ...
+// ── GET /api/missions/:id/status (ESTUDANTE: Verificar status da batalha) ──
+router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const studentId = req.user?.id;
+    const missionId = req.params.id;
+
+    const result = await qOne(
+      `SELECT m.monster_hp, sm.progress 
+       FROM student_missions sm
+       JOIN missions m ON sm.mission_id = m.id
+       WHERE sm.student_id = $1 AND sm.mission_id = $2`,
+      [studentId, missionId]
+    );
+
+    if (!result) throw new NotFoundError("Missão não encontrada ou não iniciada.");
+
+    const defeated = result.progress >= result.monster_hp;
+
+    success(res, {
+      monster_hp: result.monster_hp,
+      current_progress: result.progress,
+      is_defeated: defeated,
+      message: defeated ? "Parabéns! Monstro derrotado!" : "O monstro ainda está vivo."
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ── POST /api/missions/:id/finish (ESTUDANTE: Concluir missão vinda do front-end) ──
 router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -412,7 +362,7 @@ router.delete("/:id", async (req: CustomRequest, res: Response, next: NextFuncti
   }
 });
 
-// ── GET /api/missions/:id (Detalhes da missão + Pergaminho de Questões - Movido para o final) ──
+// ── GET /api/missions/:id (Detalhes da missão + Questões) ──
 router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const mission = await qOne("SELECT * FROM missions WHERE id = $1", [req.params.id]);
