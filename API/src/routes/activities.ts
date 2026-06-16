@@ -165,7 +165,7 @@ router.post("/:id/submit", validate(submitActivitySchema), async (req: CustomReq
     const studentId = bodyStudentId || req.headers["x-user-id"] || req.user?.id || "s3";
 
     const studentExists = await qOne("SELECT id FROM students WHERE id = $1", [studentId]);
-    if (!studentExists) throw new NotFoundError("Estudante");
+    if (!studentExists) throw new NotFoundError("Você é Professor, não pode enviar resposta para uma atividade");
 
     // Verificar histórico de envios anteriores
     const existingRecord = await qOne(
