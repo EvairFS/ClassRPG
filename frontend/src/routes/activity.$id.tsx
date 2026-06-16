@@ -148,9 +148,6 @@ function ActivityDetail() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            // 🔥 Aqui! Transforma "correct" em "CORRECT" ou "wrong" em "WRONG"
-            evaluation: evaluation.toUpperCase(),
-
             // Garante que se for undefined, envie uma string vazia pro back não quebrar
             feedback: feedback || "",
           }),
