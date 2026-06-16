@@ -253,7 +253,7 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
       [missionId]
     );
 
-    return res.json(report);
+    return success(res, report);
 
   } catch (error) {
     next(error);
