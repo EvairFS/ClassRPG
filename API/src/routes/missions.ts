@@ -243,7 +243,7 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
         sbl.created_at,
         q.statement as question_statement,
         s.classroom,
-        s.name as student_name  -- 🌟 DEIXE EXATAMENTE ASSIM (ou s.nome se sua coluna for em português)
+        s.name as student_name  -- 🌟 SE NO BANCO FOR 'nome', DEIXE ASSIM!
       FROM student_battle_logs sbl
       JOIN questions q ON sbl.question_id = q.id
       JOIN students s ON sbl.student_id = s.id
