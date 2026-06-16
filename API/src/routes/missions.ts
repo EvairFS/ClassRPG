@@ -291,48 +291,48 @@ router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFu
   }
 });
 
-// ── POST /api/missions/:id/join (Estudante aceitar/entrar em uma missão) ──
-router.post("/:id/join", async (req: CustomRequest, res: Response, next: NextFunction) => {
+// 📋 ROTA DO RELATÓRIO COM O JOIN CORRIGIDO (1:1) ──
+router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
-    const studentId = req.user?.id; 
+    const teacherId = req.user?.id;
 
-    if (!studentId) {
-      throw new BadRequestError("Estudante não identificado na sessão.");
+    const mission = await qOne(
+      "SELECT id, teacher_id FROM missions WHERE id = $1", 
+      [missionId]
+    );
+    
+    if (!mission) {
+      throw new NotFoundError("Missão não encontrada.");
     }
 
-    const mission = await qOne("SELECT id, monster_hp FROM missions WHERE id = $1", [missionId]);
-    if (!mission) throw new NotFoundError("Missão");
-
-    const alreadyJoined = await qOne(
-      "SELECT id FROM student_missions WHERE student_id = $1 AND mission_id = $2",
-      [studentId, missionId]
-    );
-    if (alreadyJoined) {
-      throw new BadRequestError("Você já está participando desta missão.");
+    if (mission.teacher_id !== teacherId && req.user?.role !== 'teacher') {
+      throw new BadRequestError("Acesso negado. Apenas o professor desta missão pode ver este relatório.");
     }
 
-    const studentMissionId = randomUUID();
-
-    const rows = await q(
-      `INSERT INTO student_missions (
-        id,
-        student_id, 
-        mission_id, 
-        status, 
-        progress, 
-        total, 
-        current_monster_hp, 
-        current_student_hp,
-        created_at,
-        updated_at
-      ) VALUES ($1, $2, $3, 'IN_PROGRESS', 0, $4, $4, 100, NOW(), NOW()) RETURNING *`,
-      [studentMissionId, studentId, missionId, Number(mission.monster_hp)]
+    const report = await q(
+      `SELECT 
+        sbl.id as log_id,
+        sbl.student_id,
+        sbl.is_correct,
+        sbl.created_at,
+        q.statement as question_statement,
+        s.classroom,
+        u.name as student_name
+      FROM student_battle_logs sbl
+      JOIN questions q ON sbl.question_id = q.id
+      JOIN students s ON sbl.student_id = s.id
+      JOIN users u ON s.id = u.id  -- 🌟 CORRIGIDO: Relação 1:1 usando o próprio ID do estudante
+      WHERE q.mission_id = $1
+      ORDER BY sbl.created_at DESC`,
+      [missionId]
     );
 
-    created(res, rows[0]);
-  } catch (err) {
-    next(err);
+    // Retorna o relatório formatado para o Front-end
+    return res.json(report);
+
+  } catch (error) {
+    next(error);
   }
 });
 
