@@ -291,7 +291,9 @@ router.get("/:id/status", async (req: CustomRequest, res: Response, next: NextFu
   }
 });
 
-// 📋 ROTA DO RELATÓRIO COM O JOIN CORRIGIDO (1:1) ──
+// ... rotas anteriores (/, /answer, /my-missions, /profile) ...
+
+// 📋 MANTER APENAS ESTA VERSÃO DO RELATÓRIO (Apague a outra!)
 router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
@@ -322,19 +324,20 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
       FROM student_battle_logs sbl
       JOIN questions q ON sbl.question_id = q.id
       JOIN students s ON sbl.student_id = s.id
-      JOIN users u ON s.id = u.id  -- 🌟 CORRIGIDO: Relação 1:1 usando o próprio ID do estudante
+      JOIN users u ON s.id = u.id
       WHERE q.mission_id = $1
       ORDER BY sbl.created_at DESC`,
       [missionId]
     );
 
-    // Retorna o relatório formatado para o Front-end
     return res.json(report);
 
   } catch (error) {
     next(error);
   }
 });
+
+// ... resto das rotas (/:id/status, /:id/finish, /:id) ...
 
 // ── POST /api/missions/:id/finish (ESTUDANTE: Concluir missão vinda do front-end) ──
 router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextFunction) => {
