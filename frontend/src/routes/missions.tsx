@@ -38,13 +38,14 @@ function MissionsPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
 
-  // Função para buscar os dados quando o professor clicar
-  const handleOpenReport = async (missionId: string) => {
+  // 🛠️ FIX: Função agora recebe o evento do mouse e impede o comportamento de redirecionar
+  const handleOpenReport = async (e: React.MouseEvent, missionId: string) => {
+    e.preventDefault(); // 🛑 Trava o TanStack Router e evita comportamento de link/submit
     try {
       setLoadingReportId(missionId);
       const data = await api.getMissionReport(missionId);
       setReportData(data);
-      setIsReportOpen(true);
+      setIsReportOpen(true); // Abre estritamente o pop-up na mesma tela
     } catch (error) {
       alert("Não foi possível carregar o relatório de combate.");
     } finally {
@@ -90,7 +91,7 @@ function MissionsPage() {
   return (
     <AppShell role={shellRole} title="Missões">
       <div className="space-y-6">
-        {/* Card do Acumulado (Só faz sentido visual para estudantes, mas mantido) */}
+        {/* Card do Acumulado */}
         <div className="glass-strong relative overflow-hidden rounded-3xl p-6">
           <div className="pointer-events-none absolute -top-20 right-0 size-72 rounded-full bg-primary/25 blur-3xl" />
           <div className="relative flex flex-wrap items-end justify-between gap-4">
@@ -159,7 +160,8 @@ function MissionsPage() {
                 {/* 🔒 BOTÃO TRAVADO EXCLUSIVAMENTE PARA PROFESSORES */}
                 {isTeacher && (
                   <button
-                    onClick={() => handleOpenReport(m.id)}
+                    type="button" // 🛠️ Explicitado como botão simples para o HTML não inventar modas
+                    onClick={(e) => handleOpenReport(e, m.id)}
                     disabled={loadingReportId === m.id}
                     className="w-full mt-1 border border-purple-500/30 bg-purple-950/20 hover:bg-purple-600 hover:text-white text-purple-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                   >
@@ -188,6 +190,7 @@ function MissionsPage() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsReportOpen(false)}
                 className="text-muted-foreground hover:text-foreground bg-white/5 hover:bg-white/10 size-8 rounded-lg font-medium transition flex items-center justify-center"
               >
