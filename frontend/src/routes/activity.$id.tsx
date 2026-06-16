@@ -123,6 +123,7 @@ function ActivityDetail() {
 
   // Mutation: Professor avalia resposta do aluno
   // Mutation: Professor avalia resposta do aluno
+  // Mutation: Professor avalia resposta do aluno
   const gradeMutation = useMutation({
     mutationFn: async ({ submissionId, evaluation, feedback }: GradePayload) => {
       // 🛡️ Extraindo o token do objeto "classrpg.auth"
@@ -147,9 +148,8 @@ function ActivityDetail() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            // Se o seu back exigir letras MAIÚSCULAS, descomente a linha abaixo:
-            // evaluation: evaluation.toUpperCase(),
-            evaluation,
+            // 🔥 Aqui! Transforma "correct" em "CORRECT" ou "wrong" em "WRONG"
+            evaluation: evaluation.toUpperCase(),
 
             // Garante que se for undefined, envie uma string vazia pro back não quebrar
             feedback: feedback || "",
@@ -157,14 +157,12 @@ function ActivityDetail() {
         },
       );
 
-      // 🔥 CRUCIAL PARA O REACT QUERY: Lança o erro se o status não for 2xx (ex: 401, 500)
+      // Intercepta erros do servidor para o React Query tratar na tela
       if (!res.ok) {
-        // Tenta ler a mensagem de erro que o back enviou na aba "Resposta"
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || `Erro no servidor: ${res.status}`);
+        throw new Error(errorData.error || `Erro no servidor: ${res.status}`);
       }
 
-      // Se deu tudo certo, retorna o JSON de sucesso
       return res.json();
     },
   });
