@@ -72,16 +72,35 @@ function ActivityDetail() {
   const { data: pendingSubmissions, refetch: refetchPending } = useQuery<PendingSubmission[]>({
     queryKey: ["pendingSubmissions"],
     queryFn: async () => {
-      // 🚀 Agora apontando corretamente para o Render!
+      // 1. Pega a string do localStorage
+      const authStorage = localStorage.getItem("classrpg.auth");
+      let token = "";
+
+      // 2. Extrai o token com segurança se o objeto existir
+      if (authStorage) {
+        try {
+          const parsedAuth = JSON.parse(authStorage);
+          token = parsedAuth.token || "";
+        } catch (err) {
+          console.error("Erro ao fazer parse do token:", err);
+        }
+      }
+
+      // 3. Faz a requisição enviando o token real extraído
       const res = await fetch(
         `https://classrpg-api-26wl.onrender.com/api/activities/submissions/pending`,
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
       );
-      const json = await res.json();
 
-      // 🛡️ Linha de segurança: se o json for o array bruto, usa ele. Se tiver .data, usa o .data.
+      if (!res.ok) {
+        throw new Error("Erro ao buscar submissões pendentes");
+      }
+
+      const json = await res.json();
       return Array.isArray(json) ? json : json.data || [];
     },
     enabled: hydrated && isAuthenticated && isTeacher,
@@ -103,16 +122,29 @@ function ActivityDetail() {
   });
 
   // Mutation: Professor avalia resposta do aluno
+  // Mutation: Professor avalia resposta do aluno
   const gradeMutation = useMutation({
     mutationFn: async ({ submissionId, evaluation, feedback }: GradePayload) => {
-      // Adicionado o domínio correto do Render antes da rota
+      // 🛡️ Extraindo o token do objeto "classrpg.auth" igual você fez lá em cima!
+      const authStorage = localStorage.getItem("classrpg.auth");
+      let token = "";
+
+      if (authStorage) {
+        try {
+          const parsedAuth = JSON.parse(authStorage);
+          token = parsedAuth.token || "";
+        } catch (err) {
+          console.error("Erro ao fazer parse do token na mutation:", err);
+        }
+      }
+
       const res = await fetch(
         `https://classrpg-api-26wl.onrender.com/api/activities/submissions/${submissionId}/grade`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${token}`, // 🚀 Agora corrigido com o token real!
           },
           body: JSON.stringify({ evaluation, feedback }),
         },
