@@ -391,4 +391,52 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
   }
 });
 
+// ── GET /api/missions/:id/report (PROFESSOR: Ver relatório de batalhas da missão) ──
+router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const missionId = req.params.id;
+    const teacherId = req.user?.id;
+
+    // 1. BARREIRA DE SEGURANÇA: Verifica se a missão existe e se pertence a este professor
+    const mission = await qOne(
+      "SELECT id, teacher_id FROM missions WHERE id = $1", 
+      [missionId]
+    );
+    
+    if (!mission) {
+      throw new NotFoundError("Missняo não encontrada.");
+    }
+
+    // Se o ID do criador da missão for diferente do ID logado E ele não tiver role de admin/teacher, barra o acesso
+    if (mission.teacher_id !== teacherId && req.user?.role !== 'teacher') {
+      throw new BadRequestError("Acesso negado. Apenas o professor desta missão pode ver este relatório.");
+    }
+
+    // 2. CONSULTA SQL: Junta os logs de batalha com os dados dos alunos e as perguntas
+    const report = await q(
+      `SELECT 
+        sbl.id as log_id,
+        sbl.student_id,
+        sbl.is_correct,
+        sbl.created_at,
+        q.statement as question_statement,
+        s.classroom
+        -- 💡 Se a sua tabela 'students' tiver uma coluna 'name', 
+        -- adicione ela aqui descomentando a linha abaixo:
+        -- s.name as student_name
+       FROM student_battle_logs sbl
+       JOIN questions q ON sbl.question_id = q.id
+       JOIN students s ON sbl.student_id = s.id
+       WHERE q.mission_id = $1
+       ORDER BY sbl.created_at DESC`,
+      [missionId]
+    );
+
+    // Retorna a lista de logs processados com sucesso
+    success(res, report);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

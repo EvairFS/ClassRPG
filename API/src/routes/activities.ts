@@ -62,31 +62,58 @@ router.post("/:id/submit", validate(submitActivitySchema), async (req: CustomReq
 
     const { submission, studentId: bodyStudentId } = req.body;
     
-    // 🌟 Graças ao CustomRequest, o TypeScript agora autocompleta e aceita o req.user sem erros
     const studentId = bodyStudentId || req.headers["x-user-id"] || req.user?.id || "s3";
 
     const studentExists = await qOne("SELECT id FROM students WHERE id = $1", [studentId]);
     if (!studentExists) throw new NotFoundError("Estudante");
 
-    // Update activity status
-    await q(
-      "UPDATE activities SET status = 'submitted', submission = COALESCE($1, submission) WHERE id = $2",
-      [submission || null, req.params.id]
+    // 🛠️ CORREÇÃO 1: Verificar se já existe um registro do aluno para esta atividade
+    const existingRecord = await qOne(
+      "SELECT id FROM student_activities WHERE student_id = $1 AND activity_id = $2",
+      [studentId, req.params.id]
     );
 
-    // Award XP to student and update level
+    if (existingRecord) {
+      // Se já existir (ex: status 'pending'), nós atualizamos a entrega
+      await q(
+        "UPDATE student_activities SET submission = $1, status = 'submitted', updated_at = now() WHERE id = $2",
+        [submission || null, existingRecord.id]
+      );
+    } else {
+      // Se não existir, criamos o registro de entrega do zero
+      await q(
+        "INSERT INTO student_activities (student_id, activity_id, submission, status) VALUES ($1, $2, $3, 'submitted')",
+        [studentId, req.params.id, submission || null]
+      );
+    }
+
+    // Award XP to student and update level (Mantido igual)
     const student = await qOne(
       "UPDATE students SET xp = xp + $1, level = floor((xp + $1) / 250) + 1, activities_completed = activities_completed + 1 WHERE id = $2 RETURNING *",
       [activity.xp_reward, studentId]
     );
 
-    // Award XP to team
+    // Award XP to team (Mantido igual)
     await q(
       "UPDATE teams SET xp = xp + $1, weekly_xp = weekly_xp + $1 WHERE id = (SELECT team_id FROM students WHERE id = $2)",
       [activity.xp_reward, studentId]
     );
 
-    const updatedAct = await qOne("SELECT * FROM activities WHERE id = $1", [req.params.id]);
+    // 🛠️ CORREÇÃO 2: Buscar a atividade combinada com a entrega usando o LEFT JOIN que funcionou no Supabase
+    const updatedAct = await qOne(
+      `SELECT 
+        a.*, 
+        sa.submission, 
+        sa.status AS student_status, 
+        sa.grade, 
+        sa.feedback
+       FROM activities a
+       LEFT JOIN student_activities sa 
+         ON a.id = sa.activity_id AND sa.student_id = $2
+       WHERE a.id = $1`,
+      [req.params.id, studentId]
+    );
+
     success(res, { activity: updatedAct, student, xpEarned: activity.xp_reward });
   } catch (err) {
     next(err);

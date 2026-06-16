@@ -138,7 +138,6 @@ interface Question {
   correctIndex: number;
 }
 
-// ⚔️ Atualizado para conter o HP do Boss e outras infos opcionais de recompensa
 export interface MissionWithQuestions {
   id: string;
   title: string;
@@ -146,6 +145,17 @@ export interface MissionWithQuestions {
   xpReward?: number;
   xp?: number;
   questions: Question[];
+}
+
+// 📋 Interface do Relatório colocada corretamente do lado de fora do objeto
+export interface BattleReportItem {
+  logId: string;
+  studentId: string;
+  isCorrect: boolean;
+  createdAt: string;
+  questionStatement: string;
+  classroom: string;
+  studentName?: string;
 }
 
 // ── Public API surface ─────────────────────────────────────────────────
@@ -199,7 +209,6 @@ export const api = {
       method: "POST",
     }),
 
-  // 🛠️ CORRIGIDO: Removido o 'p0' obrigatório que quebrava a chamada do componente
   getMissions: (missionId: string) => request<Mission[]>("/missions"),
 
   getAchievements: () => request<Achievement[]>("/achievements"),
@@ -235,9 +244,9 @@ export const api = {
     return {
       id: data.id,
       title: data.title,
-      hp: data.monsterHp, // monsterHp → hp
+      hp: data.monsterHp,
       xpReward: data.xpReward,
-      questions: data.questions, // já vem camelizado pelo camelize()
+      questions: data.questions,
     } as MissionWithQuestions;
   },
 
@@ -249,6 +258,10 @@ export const api = {
       method: "POST",
       body: payload,
     }),
+
+  // 📋 Método adicionado corretamente na superfície pública da API
+  getMissionReport: (missionId: string) =>
+    request<BattleReportItem[]>(`/missions/${missionId}/report`),
 };
 
 interface AuthUserResponse {
