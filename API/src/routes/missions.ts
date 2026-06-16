@@ -242,12 +242,13 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
         sbl.is_correct,
         sbl.created_at,
         q.statement as question_statement,
-        s.classroom
-       FROM student_battle_logs sbl
-       JOIN questions q ON sbl.question_id = q.id
-       JOIN students s ON sbl.student_id = s.id
-       WHERE q.mission_id = $1
-       ORDER BY sbl.created_at DESC`,
+        s.classroom,
+        s.name as student_name  -- 🌟 DEIXE EXATAMENTE ASSIM (ou s.nome se sua coluna for em português)
+      FROM student_battle_logs sbl
+      JOIN questions q ON sbl.question_id = q.id
+      JOIN students s ON sbl.student_id = s.id
+      WHERE q.mission_id = $1
+      ORDER BY sbl.created_at DESC`,
       [missionId]
     );
 
