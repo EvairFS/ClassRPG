@@ -216,7 +216,7 @@ router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunct
   }
 });
 
-// 📋 ROTA DO RELATÓRIO SUBIDA AQUI COM SUCESSO (Antes da genérica /:id) ──
+// 📋 ROTA DO RELATÓRIO TOTALMENTE CORRIGIDA E ALINHADA ──
 router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
@@ -243,18 +243,22 @@ router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFu
         sbl.created_at,
         q.statement as question_statement,
         s.classroom,
-        s.name as student_name  -- 🌟 SE NO BANCO FOR 'nome', DEIXE ASSIM!
+        u.name as student_name
       FROM student_battle_logs sbl
       JOIN questions q ON sbl.question_id = q.id
       JOIN students s ON sbl.student_id = s.id
+      JOIN users u ON s.user_id = u.id
       WHERE q.mission_id = $1
       ORDER BY sbl.created_at DESC`,
       [missionId]
     );
 
-    success(res, report);
-  } catch (err) {
-    next(err);
+    // Retorna o relatório estruturado para o Front-end
+    return res.json(report);
+
+  } catch (error) {
+    // Encaminha o erro para o middleware global tratar
+    next(error);
   }
 });
 
