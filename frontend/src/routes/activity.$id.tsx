@@ -121,9 +121,6 @@ function ActivityDetail() {
     },
   });
 
-  // Mutation: Professor avalia resposta do aluno
-  // Mutation: Professor avalia resposta do aluno
-  // Mutation: Professor avalia resposta do aluno
   const gradeMutation = useMutation({
     mutationFn: async ({ submissionId, evaluation, feedback }: GradePayload) => {
       // 🛡️ Extraindo o token do objeto "classrpg.auth"
@@ -148,7 +145,7 @@ function ActivityDetail() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            // Garante que se for undefined, envie uma string vazia pro back não quebrar
+            evaluation, // 🔥 Enviando 'correct' ou 'wrong' para o Back-end
             feedback: feedback || "",
           }),
         },
@@ -161,6 +158,11 @@ function ActivityDetail() {
       }
 
       return res.json();
+    },
+    // ✨ Atualiza a lista automaticamente após avaliar com sucesso
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pendingSubmissions"] });
+      qc.invalidateQueries({ queryKey: ["activity", id] });
     },
   });
 
