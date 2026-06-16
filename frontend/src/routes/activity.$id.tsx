@@ -72,7 +72,7 @@ function ActivityDetail() {
   const { data: pendingSubmissions, refetch: refetchPending } = useQuery<PendingSubmission[]>({
     queryKey: ["pendingSubmissions"],
     queryFn: async () => {
-      // Adicionado o domínio correto do Render antes da rota
+      // 🚀 Agora apontando corretamente para o Render!
       const res = await fetch(
         `https://classrpg-api-26wl.onrender.com/api/activities/submissions/pending`,
         {
@@ -80,7 +80,9 @@ function ActivityDetail() {
         },
       );
       const json = await res.json();
-      return json.data;
+
+      // 🛡️ Linha de segurança: se o json for o array bruto, usa ele. Se tiver .data, usa o .data.
+      return Array.isArray(json) ? json : json.data || [];
     },
     enabled: hydrated && isAuthenticated && isTeacher,
   });
