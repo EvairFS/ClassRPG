@@ -1,14 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react"; // 💡 Adicionado useMemo aqui
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { MissionCard } from "@/components/gamification/MissionCard";
-import { api, type BattleReportItem } from "@/lib/api"; 
+import { api, type BattleReportItem } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { ErrorState, LoadingState } from "@/components/common/QueryState";
 import type { Mission } from "@/types";
 import { cn } from "@/lib/utils";
-import { Calendar, Sparkles, Swords, Target, Trophy, Zap, FileText, Frown, Smile, Brain, Award } from "lucide-react";
+import {
+  Calendar,
+  Sparkles,
+  Swords,
+  Target,
+  Trophy,
+  Zap,
+  FileText,
+  Frown,
+  Smile,
+  Brain,
+  Award,
+} from "lucide-react";
 
 export const Route = createFileRoute("/missions")({
   head: () => ({
@@ -38,12 +50,15 @@ function MissionsPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
 
-  // 📊 CÁLCULO DE MÉTRICAS EM TEMPO REAL (MÁGICA DO FRONT-END)
+  // 📊 CÁLCULO DE MÉTRICAS EM TEMPO REAL
   const stats = useMemo(() => {
     if (!reportData || reportData.length === 0) return null;
 
     const questionMap: Record<string, { total: number; correct: number }> = {};
-    const studentMap: Record<string, { total: number; correct: number; classroom: string }> = {};
+    const studentMap: Record<
+      string,
+      { total: number; correct: number; classroom: string; name: string }
+    > = {};
 
     // Agrupa acertos e erros por questão e por aluno
     reportData.forEach((log) => {
@@ -56,7 +71,13 @@ function MissionsPage() {
 
       // 2. Processa Alunos
       if (!studentMap[log.studentId]) {
-        studentMap[log.studentId] = { total: 0, correct: 0, classroom: log.classroom };
+        studentMap[log.studentId] = {
+          total: 0,
+          correct: 0,
+          classroom: log.classroom,
+          // 🛡️ LOCAL CORRETO DA BLINDAGEM: Lê tanto camelCase quanto snake_case da API
+          name: log.studentName || log.student_name || `Recruta #${log.studentId.slice(0, 4)}`,
+        };
       }
       studentMap[log.studentId].total += 1;
       if (log.isCorrect) studentMap[log.studentId].correct += 1;
@@ -68,10 +89,10 @@ function MissionsPage() {
     let hardestQuestion = "";
     let hardestQuestionRate = 2;
 
-    let easiestStudentId = "";
+    let easiestStudentName = "";
     let easiestStudentClass = "";
     let easiestStudentRate = -1;
-    let hardestStudentId = "";
+    let hardestStudentName = "";
     let hardestStudentClass = "";
     let hardestStudentRate = 2;
 
@@ -88,17 +109,17 @@ function MissionsPage() {
       }
     });
 
-    // Varre alunos para descobrir maior facilidade e maior dificuldade
-    Object.entries(studentMap).forEach(([id, data]) => {
+    // Varre alunos para descobrir quem teve maior facilidade e maior dificuldade
+    Object.entries(studentMap).forEach(([_, data]) => {
       const rate = data.correct / data.total;
       if (rate > easiestStudentRate) {
         easiestStudentRate = rate;
-        easiestStudentId = id;
+        easiestStudentName = data.name;
         easiestStudentClass = data.classroom;
       }
       if (rate < hardestStudentRate) {
         hardestStudentRate = rate;
-        hardestStudentId = id;
+        hardestStudentName = data.name;
         hardestStudentClass = data.classroom;
       }
     });
@@ -108,10 +129,10 @@ function MissionsPage() {
       hardestQuestionPercent: Math.round((1 - hardestQuestionRate) * 100), // taxa de erro
       easiestQuestion,
       easiestQuestionPercent: Math.round(easiestQuestionRate * 100), // taxa de acerto
-      bestStudent: `Recruta #${hardestStudentId.slice(0, 4)}`, // Aluno com mais acertos
+      bestStudent: easiestStudentName, // Exibe o nome real mapeado
       bestStudentClass: easiestStudentClass,
       bestStudentPercent: Math.round(easiestStudentRate * 100),
-      worstStudent: `Recruta #${easiestStudentId.slice(0, 4)}`, // Aluno com mais erros
+      worstStudent: hardestStudentName, // Exibe o nome real mapeado
       worstStudentClass: hardestStudentClass,
       worstStudentPercent: Math.round((1 - hardestStudentRate) * 100), // taxa de erro do aluno
     };
@@ -119,12 +140,12 @@ function MissionsPage() {
 
   // Função para buscar os dados quando o professor clicar
   const handleOpenReport = async (e: React.MouseEvent, missionId: string) => {
-    e.preventDefault(); 
+    e.preventDefault();
     try {
       setLoadingReportId(missionId);
       const data = await api.getMissionReport(missionId);
       setReportData(data);
-      setIsReportOpen(true); 
+      setIsReportOpen(true);
     } catch (error) {
       alert("Não foi possível carregar o relatório de combate.");
     } finally {
@@ -256,7 +277,6 @@ function MissionsPage() {
       {isReportOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-xs animate-fade-in">
           <div className="bg-slate-950 text-slate-100 rounded-2xl p-6 max-w-5xl w-full max-h-[85vh] overflow-y-auto border border-purple-500/30 shadow-2xl shadow-purple-950/20">
-            
             {/* Header do Modal */}
             <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
               <div>
@@ -276,19 +296,23 @@ function MissionsPage() {
               </button>
             </div>
 
-            {/* 📈 NOVO: PAINEL DE METRICAS KPI */}
+            {/* 📈 PAINEL DE METRICAS KPI */}
             {stats && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                
                 {/* Card Questão Mais Difícil */}
                 <div className="bg-red-950/20 border border-red-500/20 rounded-xl p-4 flex flex-col justify-between">
                   <div className="flex items-center gap-2 text-red-400 font-semibold text-xs uppercase tracking-wider">
                     <Brain className="size-4" /> Questão Mais Difícil
                   </div>
-                  <p className="text-sm font-medium mt-2 text-slate-200 line-clamp-2" title={stats.hardestQuestion}>
+                  <p
+                    className="text-sm font-medium mt-2 text-slate-200 line-clamp-2"
+                    title={stats.hardestQuestion}
+                  >
                     "{stats.hardestQuestion}"
                   </p>
-                  <span className="text-xs text-red-400 font-bold mt-1">🔥 {stats.hardestQuestionPercent}% de Erros</span>
+                  <span className="text-xs text-red-400 font-bold mt-1">
+                    🔥 {stats.hardestQuestionPercent}% de Erros
+                  </span>
                 </div>
 
                 {/* Card Questão Mais Fácil */}
@@ -296,10 +320,15 @@ function MissionsPage() {
                   <div className="flex items-center gap-2 text-green-400 font-semibold text-xs uppercase tracking-wider">
                     <Award className="size-4" /> Questão Mais Fácil
                   </div>
-                  <p className="text-sm font-medium mt-2 text-slate-200 line-clamp-2" title={stats.easiestQuestion}>
+                  <p
+                    className="text-sm font-medium mt-2 text-slate-200 line-clamp-2"
+                    title={stats.easiestQuestion}
+                  >
                     "{stats.easiestQuestion}"
                   </p>
-                  <span className="text-xs text-green-400 font-bold mt-1">✨ {stats.easiestQuestionPercent}% de Acertos</span>
+                  <span className="text-xs text-green-400 font-bold mt-1">
+                    ✨ {stats.easiestQuestionPercent}% de Acertos
+                  </span>
                 </div>
 
                 {/* Card Aluno Maior Dificuldade */}
@@ -309,9 +338,13 @@ function MissionsPage() {
                   </div>
                   <div className="mt-2">
                     <p className="text-sm font-bold text-slate-200">{stats.worstStudent}</p>
-                    <p className="text-xs text-muted-foreground">Turma: {stats.worstStudentClass}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Turma: {stats.worstStudentClass}
+                    </p>
                   </div>
-                  <span className="text-xs text-amber-400 font-bold mt-1">🛡️ {stats.worstStudentPercent}% de Erros</span>
+                  <span className="text-xs text-amber-400 font-bold mt-1">
+                    🛡️ {stats.worstStudentPercent}% de Erros
+                  </span>
                 </div>
 
                 {/* Card Aluno Maior Facilidade */}
@@ -323,9 +356,10 @@ function MissionsPage() {
                     <p className="text-sm font-bold text-slate-200">{stats.bestStudent}</p>
                     <p className="text-xs text-muted-foreground">Turma: {stats.bestStudentClass}</p>
                   </div>
-                  <span className="text-xs text-blue-400 font-bold mt-1">🏆 {stats.bestStudentPercent}% de Acertos</span>
+                  <span className="text-xs text-blue-400 font-bold mt-1">
+                    🏆 {stats.bestStudentPercent}% de Acertos
+                  </span>
                 </div>
-
               </div>
             )}
 
