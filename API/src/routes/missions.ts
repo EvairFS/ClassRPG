@@ -60,7 +60,7 @@ router.post("/", async (req: CustomRequest, res: Response, next: NextFunction) =
 // ── POST /api/missions/answer (ESTUDANTE: Responder com transação e trava de segurança) ──
 router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunction) => {
   let inTransaction = false;
-  let missionCompleted = false; // Flag para avisar o frontend se o monstro morreu
+  let missionCompleted = false; 
 
   try {
     const { question_id, student_answer_index } = req.body;
@@ -78,18 +78,13 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
       throw new NotFoundError("Pergunta não encontrada.");
     }
     
-    // ─── BLINDAGEM DE TIPOS E BASES APLICADA AQUI ───
     const rawStudentAnswer = Number(student_answer_index);
     const rawCorrectIndex = Number(question.correct_index);
 
     const isCorrect = 
-      // Caso A: Ambos usam a mesma base (ex: 0 e 0, ou 1 e 1)
       rawStudentAnswer === rawCorrectIndex ||
-      // Caso B: Front envia base 0 (0,1,2) e Banco salvou base 1 (1,2,3)
       (rawStudentAnswer + 1) === rawCorrectIndex ||
-      // Caso C: Front envia base 1 (1,2,3) e Banco salvou base 0 (0,1,2)
       rawStudentAnswer === (rawCorrectIndex + 1);
-    // ────────────────────────────────────────────────
 
     await q(
       "INSERT INTO student_battle_logs (student_id, question_id, is_correct) VALUES ($1, $2, $3)",
@@ -97,7 +92,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
     );
 
     if (isCorrect) {
-      // 1. Atualiza o progresso do dano na tabela do aluno
       await q(
         `UPDATE student_missions 
          SET progress = progress + $1, updated_at = NOW() 
@@ -105,7 +99,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
         [question.damage, studentId, question.mission_id]
       );
 
-      // 2. Busca o estado atualizado e as recompensas configuradas na missão
       const missionState = await qOne(
         `SELECT sm.progress, sm.status, m.monster_hp, m.xp_reward, m.gold_reward 
          FROM student_missions sm
@@ -114,10 +107,8 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
         [studentId, question.mission_id]
       );
 
-      // 3. Checa se o monstro morreu (progress >= monster_hp) E se a missão ainda estava 'IN_PROGRESS'
       if (missionState && missionState.progress >= missionState.monster_hp && missionState.status === 'IN_PROGRESS') {
         
-        // Altera o status para impedir re-recompensas futuras
         await q(
           `UPDATE student_missions 
            SET status = 'COMPLETED', updated_at = NOW() 
@@ -125,7 +116,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
           [studentId, question.mission_id]
         );
 
-        // ADICIONA XP, OURO E CONTADOR DE MISSÕES NA TABELA STUDENTS
         await q(
           `UPDATE students 
            SET xp = xp + $1, 
@@ -142,7 +132,6 @@ router.post("/answer", async (req: CustomRequest, res: Response, next: NextFunct
     await q("COMMIT");
     inTransaction = false;
 
-    // Retorna a resposta contendo se a missão foi finalizada
     success(res, {
       correct: isCorrect,
       damage_dealt: isCorrect ? question.damage : 0,
@@ -203,18 +192,66 @@ router.get("/", async (req: CustomRequest, res: Response, next: NextFunction) =>
   }
 });
 
-// ── GET /api/missions/:id (Detalhes da missão + Pergaminho de Questões) ──
-router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+// ── GET /api/student/profile (Buscar dados reais do estudante logado) ──
+router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
-    const mission = await qOne("SELECT * FROM missions WHERE id = $1", [req.params.id]);
-    if (!mission) throw new NotFoundError("Missão");
+    const studentId = req.user?.id;
+
+    if (!studentId) {
+      throw new BadRequestError("Estudante não identificado.");
+    }
+
+    const student = await qOne(
+      "SELECT id, classroom, xp, level, patent, streak, gold FROM students WHERE id = $1",
+      [studentId]
+    );
+
+    if (!student) {
+      throw new NotFoundError("Estudante não encontrado no banco.");
+    }
+
+    success(res, student);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 📋 ROTA DO RELATÓRIO SUBIDA AQUI COM SUCESSO (Antes da genérica /:id) ──
+router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
+  try {
+    const missionId = req.params.id;
+    const teacherId = req.user?.id;
+
+    const mission = await qOne(
+      "SELECT id, teacher_id FROM missions WHERE id = $1", 
+      [missionId]
+    );
     
-    const questions = await q("SELECT * FROM questions WHERE mission_id = $1", [req.params.id]);
-    
-    success(res, { 
-      ...mission, 
-      questions: questions || [] 
-    });
+    if (!mission) {
+      throw new NotFoundError("Missão não encontrada.");
+    }
+
+    if (mission.teacher_id !== teacherId && req.user?.role !== 'teacher') {
+      throw new BadRequestError("Acesso negado. Apenas o professor desta missão pode ver este relatório.");
+    }
+
+    const report = await q(
+      `SELECT 
+        sbl.id as log_id,
+        sbl.student_id,
+        sbl.is_correct,
+        sbl.created_at,
+        q.statement as question_statement,
+        s.classroom
+       FROM student_battle_logs sbl
+       JOIN questions q ON sbl.question_id = q.id
+       JOIN students s ON sbl.student_id = s.id
+       WHERE q.mission_id = $1
+       ORDER BY sbl.created_at DESC`,
+      [missionId]
+    );
+
+    success(res, report);
   } catch (err) {
     next(err);
   }
@@ -294,51 +331,6 @@ router.post("/:id/join", async (req: CustomRequest, res: Response, next: NextFun
   }
 });
 
-// ── DELETE /api/missions/:id (PROFESSOR: Deletar uma missão específica) ──
-router.delete("/:id", async (req: CustomRequest, res: Response, next: NextFunction) => {
-  try {
-    const missionId = req.params.id;
-    const teacherId = req.user?.id;
-
-    const result = await q(
-      "DELETE FROM missions WHERE id = $1 AND teacher_id = $2 RETURNING *",
-      [missionId, teacherId]
-    );
-
-    if (result.length === 0) {
-      throw new NotFoundError("Missão não encontrada ou você não tem permissão para deletá-la.");
-    }
-
-    success(res, { message: "Missão removida com sucesso!" });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// ── GET /api/student/profile (Buscar dados reais do estudante logado) ──
-router.get("/profile", async (req: CustomRequest, res: Response, next: NextFunction) => {
-  try {
-    const studentId = req.user?.id;
-
-    if (!studentId) {
-      throw new BadRequestError("Estudante não identificado.");
-    }
-
-    const student = await qOne(
-      "SELECT id, classroom, xp, level, patent, streak, gold FROM students WHERE id = $1",
-      [studentId]
-    );
-
-    if (!student) {
-      throw new NotFoundError("Estudante não encontrado no banco.");
-    }
-
-    success(res, student);
-  } catch (err) {
-    next(err);
-  }
-});
-
 // ── POST /api/missions/:id/finish (ESTUDANTE: Concluir missão vinda do front-end) ──
 router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
@@ -391,49 +383,39 @@ router.post("/:id/finish", async (req: CustomRequest, res: Response, next: NextF
   }
 });
 
-// ── GET /api/missions/:id/report (PROFESSOR: Ver relatório de batalhas da missão) ──
-router.get("/:id/report", async (req: CustomRequest, res: Response, next: NextFunction) => {
+// ── DELETE /api/missions/:id (PROFESSOR: Deletar uma missão específica) ──
+router.delete("/:id", async (req: CustomRequest, res: Response, next: NextFunction) => {
   try {
     const missionId = req.params.id;
     const teacherId = req.user?.id;
 
-    // 1. BARREIRA DE SEGURANÇA: Verifica se a missão existe e se pertence a este professor
-    const mission = await qOne(
-      "SELECT id, teacher_id FROM missions WHERE id = $1", 
-      [missionId]
+    const result = await q(
+      "DELETE FROM missions WHERE id = $1 AND teacher_id = $2 RETURNING *",
+      [missionId, teacherId]
     );
+
+    if (result.length === 0) {
+      throw new NotFoundError("Missão não encontrada ou você não tem permissão para deletá-la.");
+    }
+
+    success(res, { message: "Missão removida com sucesso!" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /api/missions/:id (Detalhes da missão + Pergaminho de Questões - Movido para o final) ──
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const mission = await qOne("SELECT * FROM missions WHERE id = $1", [req.params.id]);
+    if (!mission) throw new NotFoundError("Missão");
     
-    if (!mission) {
-      throw new NotFoundError("Missняo não encontrada.");
-    }
-
-    // Se o ID do criador da missão for diferente do ID logado E ele não tiver role de admin/teacher, barra o acesso
-    if (mission.teacher_id !== teacherId && req.user?.role !== 'teacher') {
-      throw new BadRequestError("Acesso negado. Apenas o professor desta missão pode ver este relatório.");
-    }
-
-    // 2. CONSULTA SQL: Junta os logs de batalha com os dados dos alunos e as perguntas
-    const report = await q(
-      `SELECT 
-        sbl.id as log_id,
-        sbl.student_id,
-        sbl.is_correct,
-        sbl.created_at,
-        q.statement as question_statement,
-        s.classroom
-        -- 💡 Se a sua tabela 'students' tiver uma coluna 'name', 
-        -- adicione ela aqui descomentando a linha abaixo:
-        -- s.name as student_name
-       FROM student_battle_logs sbl
-       JOIN questions q ON sbl.question_id = q.id
-       JOIN students s ON sbl.student_id = s.id
-       WHERE q.mission_id = $1
-       ORDER BY sbl.created_at DESC`,
-      [missionId]
-    );
-
-    // Retorna a lista de logs processados com sucesso
-    success(res, report);
+    const questions = await q("SELECT * FROM questions WHERE mission_id = $1", [req.params.id]);
+    
+    success(res, { 
+      ...mission, 
+      questions: questions || [] 
+    });
   } catch (err) {
     next(err);
   }
