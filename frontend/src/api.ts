@@ -33,6 +33,15 @@ interface DashboardResponse {
   ranking?: Student[];
 }
 
+// 📜 Interface para as submissões pendentes de correção (Visão do Mestre)
+export interface PendingSubmission {
+  submission_id: string;
+  activity_id: string;
+  student_name: string;
+  classroom: string;
+  submission: string;
+}
+
 const getHeaders = (token?: string) => {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -173,12 +182,44 @@ export const api = {
     return res.json();
   },
 
-  async submitActivity(activityId: string, token?: string): Promise<{ success: boolean }> {
+  // 📝 ALUNO: Envia a atividade contendo a resposta em texto no corpo da requisição
+  async submitActivity(
+    activityId: string,
+    submission: string,
+    token?: string,
+  ): Promise<{ success: boolean; data?: { xpEarned: number } }> {
     const res = await fetch(`${BASE_URL}/activities/${activityId}/submit`, {
       method: "POST",
       headers: getHeaders(token),
+      body: JSON.stringify({ submission }),
     });
     if (!res.ok) throw new Error("Failed to submit activity");
+    return res.json();
+  },
+
+  // 📥 PROFESSOR: Busca a lista de todas as respostas enviadas que aguardam avaliação
+  async getPendingSubmissions(token?: string): Promise<PendingSubmission[]> {
+    const res = await fetch(`${BASE_URL}/activities/submissions/pending`, {
+      headers: getHeaders(token),
+    });
+    if (!res.ok) throw new Error("Failed to fetch pending submissions");
+    const json = await res.json();
+    return json.data; // Extrai o nó data retornado pelo back-end
+  },
+
+  // 👑 PROFESSOR: Avalia a submissão específica (Aprova dando XP ou Recusa enviando Feedback)
+  async gradeSubmission(
+    submissionId: string,
+    evaluation: "correct" | "wrong",
+    feedback?: string,
+    token?: string,
+  ): Promise<{ success: boolean }> {
+    const res = await fetch(`${BASE_URL}/activities/submissions/${submissionId}/grade`, {
+      method: "POST",
+      headers: getHeaders(token),
+      body: JSON.stringify({ evaluation, feedback }),
+    });
+    if (!res.ok) throw new Error("Failed to grade submission");
     return res.json();
   },
 
