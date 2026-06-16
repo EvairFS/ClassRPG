@@ -72,10 +72,13 @@ function ActivityDetail() {
   const { data: pendingSubmissions, refetch: refetchPending } = useQuery<PendingSubmission[]>({
     queryKey: ["pendingSubmissions"],
     queryFn: async () => {
-      // Usando a rota que você configurou no backend para buscar as respostas pendentes
-      const res = await fetch(`/api/activities/submissions/pending`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
-      });
+      // Adicionado o domínio correto do Render antes da rota
+      const res = await fetch(
+        `https://classrpg-api-26wl.onrender.com/api/activities/submissions/pending`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        },
+      );
       const json = await res.json();
       return json.data;
     },
@@ -100,14 +103,18 @@ function ActivityDetail() {
   // Mutation: Professor avalia resposta do aluno
   const gradeMutation = useMutation({
     mutationFn: async ({ submissionId, evaluation, feedback }: GradePayload) => {
-      const res = await fetch(`/api/activities/submissions/${submissionId}/grade`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      // Adicionado o domínio correto do Render antes da rota
+      const res = await fetch(
+        `https://classrpg-api-26wl.onrender.com/api/activities/submissions/${submissionId}/grade`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify({ evaluation, feedback }),
         },
-        body: JSON.stringify({ evaluation, feedback }),
-      });
+      );
       return res.json();
     },
     onSuccess: () => {
