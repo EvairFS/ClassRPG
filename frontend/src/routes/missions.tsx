@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react"; // 💡 Adicionado useMemo aqui
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/AppShell";
 import { MissionCard } from "@/components/gamification/MissionCard";
-import { api, type BattleReportItem } from "@/lib/api"; // Centralizado no seu lib/api
+import { api, type BattleReportItem } from "@/lib/api"; 
 import { useAuth } from "@/hooks/useAuth";
 import { ErrorState, LoadingState } from "@/components/common/QueryState";
 import type { Mission } from "@/types";
 import { cn } from "@/lib/utils";
-import { Calendar, Sparkles, Swords, Target, Trophy, Zap, FileText } from "lucide-react";
+import { Calendar, Sparkles, Swords, Target, Trophy, Zap, FileText, Frown, Smile, Brain, Award } from "lucide-react";
 
 export const Route = createFileRoute("/missions")({
   head: () => ({
@@ -33,19 +33,98 @@ function MissionsPage() {
   const [tab, setTab] = useState<Mission["type"] | "all">("all");
   const { hydrated, isAuthenticated, token, user } = useAuth();
 
-  // 📋 Estados do Relatório de Combates (Movidos para dentro do componente)
+  // 📋 Estados do Relatório de Combates
   const [reportData, setReportData] = useState<BattleReportItem[]>([]);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [loadingReportId, setLoadingReportId] = useState<string | null>(null);
 
-  // 🛠️ FIX: Função agora recebe o evento do mouse e impede o comportamento de redirecionar
+  // 📊 CÁLCULO DE MÉTRICAS EM TEMPO REAL (MÁGICA DO FRONT-END)
+  const stats = useMemo(() => {
+    if (!reportData || reportData.length === 0) return null;
+
+    const questionMap: Record<string, { total: number; correct: number }> = {};
+    const studentMap: Record<string, { total: number; correct: number; classroom: string }> = {};
+
+    // Agrupa acertos e erros por questão e por aluno
+    reportData.forEach((log) => {
+      // 1. Processa Questões
+      if (!questionMap[log.questionStatement]) {
+        questionMap[log.questionStatement] = { total: 0, correct: 0 };
+      }
+      questionMap[log.questionStatement].total += 1;
+      if (log.isCorrect) questionMap[log.questionStatement].correct += 1;
+
+      // 2. Processa Alunos
+      if (!studentMap[log.studentId]) {
+        studentMap[log.studentId] = { total: 0, correct: 0, classroom: log.classroom };
+      }
+      studentMap[log.studentId].total += 1;
+      if (log.isCorrect) studentMap[log.studentId].correct += 1;
+    });
+
+    // Variáveis para encontrar os extremos
+    let easiestQuestion = "";
+    let easiestQuestionRate = -1;
+    let hardestQuestion = "";
+    let hardestQuestionRate = 2;
+
+    let easiestStudentId = "";
+    let easiestStudentClass = "";
+    let easiestStudentRate = -1;
+    let hardestStudentId = "";
+    let hardestStudentClass = "";
+    let hardestStudentRate = 2;
+
+    // Varre questões para descobrir mais fácil e mais difícil
+    Object.entries(questionMap).forEach(([statement, data]) => {
+      const rate = data.correct / data.total;
+      if (rate > easiestQuestionRate) {
+        easiestQuestionRate = rate;
+        easiestQuestion = statement;
+      }
+      if (rate < hardestQuestionRate) {
+        hardestQuestionRate = rate;
+        hardestQuestion = statement;
+      }
+    });
+
+    // Varre alunos para descobrir maior facilidade e maior dificuldade
+    Object.entries(studentMap).forEach(([id, data]) => {
+      const rate = data.correct / data.total;
+      if (rate > easiestStudentRate) {
+        easiestStudentRate = rate;
+        easiestStudentId = id;
+        easiestStudentClass = data.classroom;
+      }
+      if (rate < hardestStudentRate) {
+        hardestStudentRate = rate;
+        hardestStudentId = id;
+        hardestStudentClass = data.classroom;
+      }
+    });
+
+    return {
+      hardestQuestion,
+      hardestQuestionPercent: Math.round((1 - hardestQuestionRate) * 100), // taxa de erro
+      easiestQuestion,
+      easiestQuestionPercent: Math.round(easiestQuestionRate * 100), // taxa de acerto
+      bestStudent: `Recruta #${hardestStudentId.slice(0, 4)}`, // Aluno com mais acertos
+      bestStudentClass: easiestStudentClass,
+      bestStudentPercent: Math.round(easiestStudentRate * 100),
+      worstStudent: `Recruta #${easiestStudentId.slice(0, 4)}`, // Aluno com mais erros
+      worstStudentClass: hardestStudentClass,
+      worstStudentPercent: Math.round((1 - hardestStudentRate) * 100), // taxa de erro do aluno
+    };
+  }, [reportData]);
+
+  // Função para buscar os dados quando o professor clicar
   const handleOpenReport = async (e: React.MouseEvent, missionId: string) => {
-    e.preventDefault(); // 🛑 Trava o TanStack Router e evita comportamento de link/submit
+    e.preventDefault(); 
     try {
       setLoadingReportId(missionId);
       const data = await api.getMissionReport(missionId);
       setReportData(data);
-      setIsReportOpen(true); // Abre estritamente o pop-up na mesma tela
+      setIsReportOpen(true); 
     } catch (error) {
       alert("Não foi possível carregar o relatório de combate.");
     } finally {
@@ -67,7 +146,6 @@ function MissionsPage() {
     .reduce((acc, m) => acc + m.xpReward, 0);
   const list = tab === "all" ? missions : missions.filter((m) => m.type === tab);
 
-  // Validações de renderização do shell baseadas no papel logado
   const shellRole = user?.role === "teacher" ? "teacher" : "student";
 
   if (!hydrated || isLoading) {
@@ -85,7 +163,6 @@ function MissionsPage() {
     );
   }
 
-  // Descobre se quem está logado é professor/admin
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
   return (
@@ -118,6 +195,7 @@ function MissionsPage() {
           </div>
         </div>
 
+        {/* Abas */}
         <div className="flex flex-wrap gap-2">
           {TABS.map((t) => {
             const Icon = t.icon;
@@ -140,6 +218,7 @@ function MissionsPage() {
           })}
         </div>
 
+        {/* Lista de Missões */}
         {list.length === 0 ? (
           <div className="glass rounded-2xl p-10 text-center text-sm text-muted-foreground">
             Nenhuma missão dessa categoria por aqui. Aguarde novas batalhas!
@@ -154,13 +233,11 @@ function MissionsPage() {
                   `stagger-${(i % 5) + 1}`,
                 )}
               >
-                {/* O card padrão da missão */}
                 <MissionCard mission={m} />
 
-                {/* 🔒 BOTÃO TRAVADO EXCLUSIVAMENTE PARA PROFESSORES */}
                 {isTeacher && (
                   <button
-                    type="button" // 🛠️ Explicitado como botão simples para o HTML não inventar modas
+                    type="button"
                     onClick={(e) => handleOpenReport(e, m.id)}
                     disabled={loadingReportId === m.id}
                     className="w-full mt-1 border border-purple-500/30 bg-purple-950/20 hover:bg-purple-600 hover:text-white text-purple-300 font-semibold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
@@ -175,10 +252,11 @@ function MissionsPage() {
         )}
       </div>
 
-      {/* 📊 MODAL DO RELATÓRIO DE COMBATE */}
+      {/* 📊 MODAL POP-UP DO RELATÓRIO DE COMBATE */}
       {isReportOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-xs animate-fade-in">
-          <div className="bg-slate-950 text-slate-100 rounded-2xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto border border-purple-500/30 shadow-2xl shadow-purple-950/20">
+          <div className="bg-slate-950 text-slate-100 rounded-2xl p-6 max-w-5xl w-full max-h-[85vh] overflow-y-auto border border-purple-500/30 shadow-2xl shadow-purple-950/20">
+            
             {/* Header do Modal */}
             <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
               <div>
@@ -198,7 +276,60 @@ function MissionsPage() {
               </button>
             </div>
 
-            {/* Tabela */}
+            {/* 📈 NOVO: PAINEL DE METRICAS KPI */}
+            {stats && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                
+                {/* Card Questão Mais Difícil */}
+                <div className="bg-red-950/20 border border-red-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-red-400 font-semibold text-xs uppercase tracking-wider">
+                    <Brain className="size-4" /> Questão Mais Difícil
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-slate-200 line-clamp-2" title={stats.hardestQuestion}>
+                    "{stats.hardestQuestion}"
+                  </p>
+                  <span className="text-xs text-red-400 font-bold mt-1">🔥 {stats.hardestQuestionPercent}% de Erros</span>
+                </div>
+
+                {/* Card Questão Mais Fácil */}
+                <div className="bg-green-950/20 border border-green-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-green-400 font-semibold text-xs uppercase tracking-wider">
+                    <Award className="size-4" /> Questão Mais Fácil
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-slate-200 line-clamp-2" title={stats.easiestQuestion}>
+                    "{stats.easiestQuestion}"
+                  </p>
+                  <span className="text-xs text-green-400 font-bold mt-1">✨ {stats.easiestQuestionPercent}% de Acertos</span>
+                </div>
+
+                {/* Card Aluno Maior Dificuldade */}
+                <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wider">
+                    <Frown className="size-4" /> Maior Dificuldade
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-bold text-slate-200">{stats.worstStudent}</p>
+                    <p className="text-xs text-muted-foreground">Turma: {stats.worstStudentClass}</p>
+                  </div>
+                  <span className="text-xs text-amber-400 font-bold mt-1">🛡️ {stats.worstStudentPercent}% de Erros</span>
+                </div>
+
+                {/* Card Aluno Maior Facilidade */}
+                <div className="bg-blue-950/20 border border-blue-500/20 rounded-xl p-4 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs uppercase tracking-wider">
+                    <Smile className="size-4" /> Maior Facilidade
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm font-bold text-slate-200">{stats.bestStudent}</p>
+                    <p className="text-xs text-muted-foreground">Turma: {stats.bestStudentClass}</p>
+                  </div>
+                  <span className="text-xs text-blue-400 font-bold mt-1">🏆 {stats.bestStudentPercent}% de Acertos</span>
+                </div>
+
+              </div>
+            )}
+
+            {/* Tabela de Logs */}
             <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/20">
               <table className="w-full text-left border-collapse">
                 <thead>
